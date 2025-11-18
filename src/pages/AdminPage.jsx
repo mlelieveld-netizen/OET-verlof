@@ -380,8 +380,8 @@ const AdminPage = ({ token }) => {
     );
   }
 
-  // Error state or no request found
-  if (error || !request) {
+  // Error state - but NOT if we're in overview mode (token === 'overview' and no request is expected)
+  if (error || (!request && token !== 'overview')) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-md p-6 max-w-md w-full">
