@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { getLeaveRequests } from '../utils/storage';
+import { getLeaveRequests, deleteLeaveRequest } from '../utils/storage';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import nl from 'date-fns/locale/nl';
+import { sendDeletionNotificationEmail } from '../utils/email';
 
 const LeaveRequestList = ({ refreshTrigger }) => {
   const [requests, setRequests] = useState([]);
@@ -14,6 +15,32 @@ const LeaveRequestList = ({ refreshTrigger }) => {
   const loadRequests = () => {
     const allRequests = getLeaveRequests();
     setRequests(allRequests.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+  };
+
+  const handleDelete = async (request) => {
+    const statusText = request.status === 'pending' 
+      ? 'intrekken' 
+      : request.status === 'approved' 
+        ? 'verwijderen (deze aanvraag was goedgekeurd)' 
+        : 'verwijderen (deze aanvraag was afgewezen)';
+    
+    if (!window.confirm(`Weet u zeker dat u deze aanvraag wilt ${statusText}?`)) {
+      return;
+    }
+
+    // If status is not pending, send notification email to admin
+    if (request.status !== 'pending') {
+      try {
+        await sendDeletionNotificationEmail(request);
+        console.log('Deletion notification email sent to admin');
+      } catch (error) {
+        console.error('Error sending deletion notification email:', error);
+        // Continue with deletion even if email fails
+      }
+    }
+
+    deleteLeaveRequest(request.id);
+    loadRequests();
   };
 
 
@@ -155,6 +182,15 @@ const LeaveRequestList = ({ refreshTrigger }) => {
                 </div>
               </div>
 
+              {/* Delete button - always visible */}
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <button
+                  onClick={() => handleDelete(request)}
+                  className="w-full py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+                >
+                  {request.status === 'pending' ? 'Intrekken' : 'Verwijderen'}
+                </button>
+              </div>
             </div>
           ))}
         </div>

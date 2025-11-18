@@ -284,3 +284,30 @@ export const sendApprovalEmail = async (request, icsContent) => {
   return await sendEmail(EMAILJS_TEMPLATE_ID_APPROVAL, templateParams);
 };
 
+// Send deletion notification email to admin
+export const sendDeletionNotificationEmail = async (request) => {
+  if (!EMAILJS_TEMPLATE_ID_ADMIN) {
+    return { success: false, error: 'EmailJS template not configured' };
+  }
+
+  const statusText = request.status === 'approved' ? 'goedgekeurd' : 'afgewezen';
+  
+  const templateParams = {
+    to_email: 'werkplaats@vandenoetelaar-metaal.nl',
+    to_name: 'Beheerder',
+    from_name: 'Beheerder@verlof',
+    employee_name: request.employeeName,
+    leave_type: request.type,
+    start_date: new Date(request.startDate).toLocaleDateString('nl-NL'),
+    end_date: request.endDate !== request.startDate 
+      ? new Date(request.endDate).toLocaleDateString('nl-NL')
+      : '',
+    reason: `De verlofaanvraag is ingetrokken door de aanvrager. De aanvraag was ${statusText}.`,
+    admin_link: '', // Geen link nodig bij verwijdering
+  };
+
+  // Use admin template but we'll need to customize the subject
+  // For now, we'll use the same template but the reason field will contain the deletion message
+  return await sendEmail(EMAILJS_TEMPLATE_ID_ADMIN, templateParams);
+};
+
