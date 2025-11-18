@@ -17,12 +17,12 @@ function App() {
       {/* Header with Logo Banner */}
       <header className="bg-oet-blue text-white shadow-md">
         <div className="max-w-md mx-auto">
-          {/* Logo Banner */}
-          <div className="flex justify-center items-center py-3 px-4">
+          {/* Logo Banner - Centered and larger */}
+          <div className="flex justify-center items-center py-4 px-4">
             <img 
               src="/OET-verlof/logo.jpg" 
               alt="OET Logo" 
-              className="h-20 object-contain"
+              className="h-24 w-auto object-contain mx-auto"
             />
           </div>
           {/* Navigation Header */}
