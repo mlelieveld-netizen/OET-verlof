@@ -121,25 +121,39 @@ const AdminPage = ({ token }) => {
       if (token === 'overview') {
         setRequest(null); // No specific request to review
         setLoading(false);
-        setActiveTab('review'); // Start with review tab to show pending requests
         loadPendingRequests();
         loadApprovedRequests();
         loadRejectedRequests();
         loadSickRequests();
+        
+        // Check if there are sick requests, if so, show ZIEK tab first
+        const allRequests = getLeaveRequests();
+        const hasSickRequests = allRequests.some(r => r && r.status === 'sick');
+        if (hasSickRequests) {
+          setActiveTab('sick');
+        } else {
+          setActiveTab('review'); // Start with review tab to show pending requests
+        }
         return;
       }
 
       const leaveRequest = getLeaveRequestByToken(token);
       if (!leaveRequest) {
         console.error('AdminPage: Request not found for token:', token);
-        // If request not found, check if there are any sick requests
-        // If so, redirect to overview page with ZIEK tab
+        
+        // Check if there are any sick requests - if so, show overview page with ZIEK tab
         const allRequests = getLeaveRequests();
         const hasSickRequests = allRequests.some(r => r && r.status === 'sick');
         
         if (hasSickRequests) {
-          // Redirect to overview page with ZIEK tab active
-          window.location.href = 'https://mlelieveld-netizen.github.io/OET-verlof/?admin=true';
+          // Show overview page with ZIEK tab active instead of error
+          setRequest(null);
+          setLoading(false);
+          setActiveTab('sick');
+          loadPendingRequests();
+          loadApprovedRequests();
+          loadRejectedRequests();
+          loadSickRequests();
           return;
         }
         
