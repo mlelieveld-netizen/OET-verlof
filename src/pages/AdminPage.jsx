@@ -110,6 +110,13 @@ const AdminPage = ({ token }) => {
     if (!request) return;
     
     updateLeaveRequest(request.id, { status: 'approved' });
+    
+    // Reload the request to get updated status
+    const updatedRequest = getLeaveRequestByToken(token);
+    if (updatedRequest) {
+      setRequest(updatedRequest);
+    }
+    
     setActionTaken(true);
     loadApprovedRequests(); // Refresh overview
     loadRejectedRequests(); // Refresh rejected overview
@@ -384,6 +391,27 @@ const ReviewTab = ({ request, employeeEmail, handleApprove, handleRejectClick, g
     return (
       <div className="bg-white rounded-lg shadow-md p-6 text-center py-12">
         <p className="text-gray-500">Geen aanvraag gevonden.</p>
+      </div>
+    );
+  }
+
+  // If request is no longer pending, show message
+  if (request.status !== 'pending') {
+    return (
+      <div className="bg-white rounded-lg shadow-md p-6 text-center py-12">
+        <div className="mb-4">
+          <div className={`inline-block px-4 py-2 rounded-full text-sm font-medium mb-4 ${
+            request.status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+          }`}>
+            {request.status === 'approved' ? '✓ Goedgekeurd' : '✗ Afgewezen'}
+          </div>
+        </div>
+        <p className="text-gray-600 mb-2">
+          Deze aanvraag is al {request.status === 'approved' ? 'goedgekeurd' : 'afgewezen'}.
+        </p>
+        <p className="text-sm text-gray-500">
+          Bekijk deze aanvraag in het tabblad "{request.status === 'approved' ? 'Overzicht Goedgekeurd' : 'Overzicht Afgekeurd'}".
+        </p>
       </div>
     );
   }
