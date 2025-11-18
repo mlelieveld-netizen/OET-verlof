@@ -49,7 +49,7 @@ const AdminPage = ({ token }) => {
       const leaveRequest = getLeaveRequestByToken(token);
       if (!leaveRequest) {
         console.error('AdminPage: Request not found for token:', token);
-        setError(`Verlofaanvraag niet gevonden voor token: ${token}\n\nMogelijke oorzaken:\n- De aanvraag is verwijderd\n- Je gebruikt een andere browser/device\n- De link is verlopen`);
+        setError('Verlofaanvraag niet gevonden. Mogelijke oorzaken: De aanvraag is verwijderd, je gebruikt een andere browser/device, of de link is verlopen.');
         setLoading(false);
         return;
       }
