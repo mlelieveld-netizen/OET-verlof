@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getLeaveRequestByToken, updateLeaveRequest } from '../utils/storage';
+import { getLeaveRequestByToken, updateLeaveRequest, getLeaveRequests } from '../utils/storage';
 import { getEmployeeEmail } from '../data/employees';
 import { generateICSFile, downloadICSFile, sendApprovalEmail } from '../utils/email';
 import { updateLeaveRequestIssue, addIssueComment } from '../utils/github';
@@ -11,6 +11,16 @@ const AdminPage = ({ token }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actionTaken, setActionTaken] = useState(false);
+  const [activeTab, setActiveTab] = useState('review'); // 'review' or 'overview'
+  const [approvedRequests, setApprovedRequests] = useState([]);
+
+  const loadApprovedRequests = () => {
+    const allRequests = getLeaveRequests();
+    const approved = allRequests
+      .filter(r => r.status === 'approved')
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    setApprovedRequests(approved);
+  };
 
   useEffect(() => {
     if (!token) {
@@ -36,13 +46,26 @@ const AdminPage = ({ token }) => {
     console.log('AdminPage: Found request:', leaveRequest);
     setRequest(leaveRequest);
     setLoading(false);
+    
+    // Load approved requests for overview tab
+    loadApprovedRequests();
   }, [token]);
+
+  // Auto-refresh approved requests every 5 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadApprovedRequests();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const handleApprove = async () => {
     if (!request) return;
     
     updateLeaveRequest(request.id, { status: 'approved' });
     setActionTaken(true);
+    loadApprovedRequests(); // Refresh overview
     
     // Update GitHub Issue if exists
     if (request.githubIssueNumber) {
@@ -152,13 +175,13 @@ const AdminPage = ({ token }) => {
     return differenceInDays(end, start) + 1;
   };
 
-  const employeeEmail = getEmployeeEmail(request.employeeNumber);
+  const employeeEmail = request ? getEmployeeEmail(request.employeeNumber) : null;
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-oet-blue text-white shadow-md">
-        <div className="max-w-2xl mx-auto px-4 py-6">
+        <div className="max-w-4xl mx-auto px-4 py-6">
           <div className="flex justify-center items-center mb-4">
             <img 
               src="/OET-verlof/logo.jpg" 
@@ -166,13 +189,64 @@ const AdminPage = ({ token }) => {
               className="h-20 w-auto object-contain"
             />
           </div>
-          <h1 className="text-2xl font-bold text-center">Verlofaanvraag Beoordelen</h1>
+          <h1 className="text-2xl font-bold text-center">Beheerderspagina</h1>
         </div>
       </header>
 
+      {/* Tabs */}
+      <div className="max-w-4xl mx-auto px-4 pt-4">
+        <div className="flex gap-2 border-b border-gray-200">
+          <button
+            onClick={() => setActiveTab('review')}
+            className={`px-6 py-3 font-medium transition-colors ${
+              activeTab === 'review'
+                ? 'border-b-2 border-oet-blue text-oet-blue'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            Beoordelen
+          </button>
+          <button
+            onClick={() => setActiveTab('overview')}
+            className={`px-6 py-3 font-medium transition-colors ${
+              activeTab === 'overview'
+                ? 'border-b-2 border-oet-blue text-oet-blue'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            Overzicht Goedgekeurd ({approvedRequests.length})
+          </button>
+        </div>
+      </div>
+
       {/* Content */}
-      <div className="max-w-2xl mx-auto p-4">
-        <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="max-w-4xl mx-auto p-4">
+        {activeTab === 'review' ? (
+          <ReviewTab 
+            request={request} 
+            employeeEmail={employeeEmail}
+            handleApprove={handleApprove}
+            handleReject={handleReject}
+            getTypeText={getTypeText}
+            calculateDays={calculateDays}
+          />
+        ) : (
+          <OverviewTab 
+            approvedRequests={approvedRequests}
+            getTypeText={getTypeText}
+            calculateDays={calculateDays}
+            getEmployeeEmail={getEmployeeEmail}
+          />
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Review Tab Component
+const ReviewTab = ({ request, employeeEmail, handleApprove, handleReject, getTypeText, calculateDays }) => {
+  return (
+    <div className="bg-white rounded-lg shadow-md p-6">
           {/* Employee Info */}
           <div className="mb-6">
             <div className="flex items-center gap-4 mb-4">
@@ -276,7 +350,75 @@ const AdminPage = ({ token }) => {
             </div>
           )}
         </div>
+    </div>
+  );
+};
+
+// Overview Tab Component
+const OverviewTab = ({ approvedRequests, getTypeText, calculateDays, getEmployeeEmail }) => {
+  if (approvedRequests.length === 0) {
+    return (
+      <div className="bg-white rounded-lg shadow-md p-6 text-center py-12">
+        <p className="text-gray-500 text-lg">Geen goedgekeurde verlofaanvragen gevonden.</p>
       </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {approvedRequests.map((req) => {
+        const empEmail = getEmployeeEmail(req.employeeNumber);
+        return (
+          <div key={req.id} className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-start gap-4 mb-4">
+              <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-700 text-xl font-bold">
+                {req.employeeName.charAt(0)}
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-2">
+                  <h3 className="text-xl font-bold text-gray-800">{req.employeeName}</h3>
+                  <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                    Goedgekeurd
+                  </span>
+                  <span className="px-3 py-1 bg-oet-blue-light text-oet-blue-dark rounded-full text-xs font-medium">
+                    {getTypeText(req.type)}
+                  </span>
+                </div>
+                {empEmail && (
+                  <p className="text-sm text-gray-600 mb-3">{empEmail}</p>
+                )}
+                
+                <div className="text-sm text-gray-600 space-y-1">
+                  <p>
+                    <span className="font-medium">Periode:</span>{' '}
+                    {format(parseISO(req.startDate), 'd MMMM yyyy', { locale: nl })}
+                    {req.endDate !== req.startDate && 
+                      ` - ${format(parseISO(req.endDate), 'd MMMM yyyy', { locale: nl })}`
+                    }
+                  </p>
+                  <p>
+                    <span className="font-medium">Aantal dagen:</span>{' '}
+                    {calculateDays(req.startDate, req.endDate)} dag(en)
+                  </p>
+                  {req.startTime && req.endTime && (
+                    <p>
+                      <span className="font-medium">Tijd:</span> {req.startTime} - {req.endTime}
+                    </p>
+                  )}
+                  {req.reason && (
+                    <p className="mt-2 text-gray-700">
+                      <span className="font-medium">Reden:</span> {req.reason}
+                    </p>
+                  )}
+                  <p className="text-xs text-gray-500 mt-2">
+                    Goedgekeurd op: {format(parseISO(req.createdAt), 'd MMMM yyyy HH:mm', { locale: nl })}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 };
