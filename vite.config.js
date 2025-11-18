@@ -21,15 +21,20 @@ export default defineConfig({
     {
       name: 'add-csp-and-scripts',
       transformIndexHtml(html) {
-        // Ensure CSP meta tag exists - add it if it doesn't exist, keep it if it does
-        const cspPattern = /<meta[^>]*http-equiv=["']Content-Security-Policy["'][^>]*>/gi;
-        if (!cspPattern.test(html)) {
-          // Add CSP meta tag right after charset
-          const cspMeta = `    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://api.emailjs.com https://*.emailjs.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.emailjs.com https://*.emailjs.com; frame-src 'self' https://api.emailjs.com;" />\n`;
+        // Always ensure CSP meta tag is present with unsafe-eval
+        // Remove any existing CSP meta tags first
+        html = html.replace(/<meta[^>]*http-equiv=["']Content-Security-Policy["'][^>]*>/gi, '');
+        
+        // Add CSP meta tag right after charset meta tag
+        const cspMeta = `    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://api.emailjs.com https://*.emailjs.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.emailjs.com https://*.emailjs.com; frame-src 'self' https://api.emailjs.com;" />\n`;
+        // Try to insert after charset, if not found, insert after head tag
+        if (html.includes('<meta charset')) {
           html = html.replace(/(<meta charset="[^"]*" \/>)/, '$1\n' + cspMeta);
+        } else if (html.includes('<head>')) {
+          html = html.replace('<head>', '<head>\n' + cspMeta);
         } else {
-          // Update existing CSP to ensure it has unsafe-eval
-          html = html.replace(cspPattern, `<meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://api.emailjs.com https://*.emailjs.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.emailjs.com https://*.emailjs.com; frame-src 'self' https://api.emailjs.com;" />`);
+          // Fallback: insert at the beginning of head section
+          html = html.replace(/(<head[^>]*>)/, '$1\n' + cspMeta);
         }
         
         // Add routing script to built index.html
