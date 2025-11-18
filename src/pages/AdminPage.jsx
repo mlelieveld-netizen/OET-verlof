@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { getLeaveRequestByToken, updateLeaveRequest } from '../utils/storage';
 import { getEmployeeEmail } from '../data/employees';
 import { generateICSFile, downloadICSFile, generateMailtoLink, generateApprovalEmailContent } from '../utils/email';
+import { updateLeaveRequestIssue, addIssueComment } from '../utils/github';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import nl from 'date-fns/locale/nl';
 
@@ -29,11 +30,21 @@ const AdminPage = ({ token }) => {
     setLoading(false);
   }, [token]);
 
-  const handleApprove = () => {
+  const handleApprove = async () => {
     if (!request) return;
     
     updateLeaveRequest(request.id, { status: 'approved' });
     setActionTaken(true);
+    
+    // Update GitHub Issue if exists
+    if (request.githubIssueNumber) {
+      try {
+        await updateLeaveRequestIssue(request.githubIssueNumber, 'approved');
+        await addIssueComment(request.githubIssueNumber, '✅ **Goedgekeurd**\n\nDe verlofaanvraag is goedgekeurd.');
+      } catch (error) {
+        console.error('Error updating GitHub issue:', error);
+      }
+    }
     
     // Generate ICS file and email
     const employeeEmail = getEmployeeEmail(request.employeeNumber);
@@ -54,11 +65,21 @@ const AdminPage = ({ token }) => {
     }
   };
 
-  const handleReject = () => {
+  const handleReject = async () => {
     if (!request) return;
     
     updateLeaveRequest(request.id, { status: 'rejected' });
     setActionTaken(true);
+    
+    // Update GitHub Issue if exists
+    if (request.githubIssueNumber) {
+      try {
+        await updateLeaveRequestIssue(request.githubIssueNumber, 'rejected');
+        await addIssueComment(request.githubIssueNumber, '❌ **Afgewezen**\n\nDe verlofaanvraag is afgewezen.');
+      } catch (error) {
+        console.error('Error updating GitHub issue:', error);
+      }
+    }
   };
 
   const getTypeText = (type) => {

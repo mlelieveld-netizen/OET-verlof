@@ -14,6 +14,8 @@ export const saveLeaveRequest = (request) => {
     createdAt: new Date().toISOString(),
     // Generate unique token for admin link
     adminToken: generateAdminToken(),
+    // GitHub issue number (if created)
+    githubIssueNumber: null,
   };
   requests.push(newRequest);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(requests));
