@@ -56,8 +56,11 @@ export default defineConfig({
           
           // Check if it's a 404 for a resource
           if (e.target && e.target.tagName) {
-            if (e.target.tagName === 'SCRIPT' || e.target.tagName === 'LINK') {
+            if (e.target.tagName === 'SCRIPT' || e.target.tagName === 'LINK' || e.target.tagName === 'IMG') {
               errorMsg = '404 Error: Resource not found: ' + fileName;
+              if (fileName.includes('logo.jpg')) {
+                errorMsg += '\\n\\nLogo bestand niet gevonden. Dit is meestal een cache probleem.';
+              }
               errorMsg += '\\n\\nThis usually means:\\n1. The page is cached (try Ctrl+Shift+R)\\n2. GitHub Pages build is not ready yet\\n3. Open in incognito mode to bypass cache';
             }
           } else if (fileName.includes('main.jsx') || fileName.includes('.js')) {
