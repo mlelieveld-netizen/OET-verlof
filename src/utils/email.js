@@ -369,6 +369,9 @@ export const sendDeletionNotificationEmail = async (request) => {
 
   const statusText = request.status === 'approved' ? 'goedgekeurd' : 'afgewezen';
   
+  // Create deletion message with red styling for HTML emails
+  const deletionMessage = `<span style="color: #dc2626; font-weight: bold;">De verlofaanvraag is ingetrokken door de aanvrager. De aanvraag was ${statusText}.</span>`;
+  
   const templateParams = {
     to_email: 'werkplaats@vandenoetelaar-metaal.nl',
     to_name: 'Beheerder',
@@ -381,7 +384,7 @@ export const sendDeletionNotificationEmail = async (request) => {
       : '',
     start_time: request.startTime || '',
     end_time: request.endTime || '',
-    reason: request.reason || '',
+    reason: deletionMessage,
     previous_status: statusText,
   };
 
