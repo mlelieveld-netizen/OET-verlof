@@ -153,7 +153,11 @@ const LeaveRequestList = ({ refreshTrigger }) => {
                       <span className="font-medium">Aantal dagen:</span>{' '}
                       {calculateDays(request.startDate, request.endDate)} dag(en)
                     </p>
-                    <p className="mt-2 text-gray-700">{request.reason}</p>
+                    {request.reason && (
+                      <p className="mt-2 text-gray-700">
+                        <span className="font-medium">Reden:</span> {request.reason}
+                      </p>
+                    )}
                     <p className="text-xs text-gray-500 mt-2">
                       Aangemaakt op: {format(parseISO(request.createdAt), 'd MMMM yyyy HH:mm', { locale: nl })}
                     </p>
