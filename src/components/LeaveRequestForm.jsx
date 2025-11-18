@@ -398,8 +398,8 @@ const LeaveRequestForm = ({ onSuccess }) => {
                       setFormData(prev => ({ 
                         ...prev, 
                         type: type.id,
-                        // Clear reason if switching away from "Bijzonder verlof"
-                        reason: type.id === 'persoonlijk' ? prev.reason : ''
+                        // Clear reason if switching away from types that need reason
+                        reason: (type.id === 'persoonlijk' || type.id === 'ziekte') ? prev.reason : ''
                       }));
                       setShowTypeDropdown(false);
                       // Clear reason error if switching away from "Bijzonder verlof"
@@ -595,13 +595,13 @@ const LeaveRequestForm = ({ onSuccess }) => {
           </>
         )}
 
-        {/* Reason field (only for Bijzonder verlof) */}
-        {formData.type === 'persoonlijk' && (
+        {/* Reason field (for Bijzonder verlof and Dokter/Tandarts) */}
+        {(formData.type === 'persoonlijk' || formData.type === 'ziekte') && (
           <>
             <div className="border-t border-gray-200 my-4"></div>
             <div>
               <label htmlFor="reason" className="block text-sm font-medium text-gray-700 mb-2">
-                Reden voor bijzonder verlof*
+                Reden{formData.type === 'persoonlijk' ? ' voor bijzonder verlof*' : ' (optioneel)'}
               </label>
               <textarea
                 id="reason"
@@ -609,7 +609,9 @@ const LeaveRequestForm = ({ onSuccess }) => {
                 value={formData.reason}
                 onChange={handleChange}
                 rows={4}
-                placeholder="Geef hier de reden op voor het bijzonder verlof..."
+                placeholder={formData.type === 'persoonlijk' 
+                  ? "Geef hier de reden op voor het bijzonder verlof..."
+                  : "Geef hier eventueel de reden op (bijv. welke dokter/tandarts)..."}
                 className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-oet-blue focus:border-transparent ${
                   errors.reason ? 'border-red-500' : 'border-gray-200'
                 }`}
