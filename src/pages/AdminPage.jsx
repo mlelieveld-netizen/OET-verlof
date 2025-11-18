@@ -218,13 +218,32 @@ const AdminPage = ({ token }) => {
     );
   }
 
+  // Safety check: if no request after loading, show error
+  if (!request) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-lg shadow-md p-6 max-w-md w-full">
+          <div className="text-red-600 text-5xl mb-4 text-center">⚠️</div>
+          <h1 className="text-2xl font-bold text-gray-800 mb-2 text-center">Fout</h1>
+          <p className="text-gray-600 text-center mb-4">Verlofaanvraag niet gevonden</p>
+          <button
+            onClick={() => window.location.href = 'https://mlelieveld-netizen.github.io/OET-verlof/'}
+            className="w-full bg-oet-blue text-white py-2 px-4 rounded-lg font-medium hover:bg-oet-blue-dark transition-colors"
+          >
+            Terug naar hoofdpagina
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const calculateDays = (startDate, endDate) => {
     const start = parseISO(startDate);
     const end = parseISO(endDate);
     return differenceInDays(end, start) + 1;
   };
 
-  const employeeEmail = request ? getEmployeeEmail(request.employeeNumber) : null;
+  const employeeEmail = getEmployeeEmail(request.employeeNumber);
 
   return (
     <div className="min-h-screen bg-gray-50">
