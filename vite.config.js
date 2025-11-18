@@ -21,12 +21,16 @@ export default defineConfig({
     {
       name: 'add-csp-and-scripts',
       transformIndexHtml(html) {
-        // Remove any existing CSP meta tags first
-        html = html.replace(/<meta[^>]*http-equiv=["']Content-Security-Policy["'][^>]*>/gi, '');
-        
-        // Add CSP meta tag right after charset, before viewport
-        const cspMeta = `    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://api.emailjs.com https://*.emailjs.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.emailjs.com https://*.emailjs.com; frame-src 'self' https://api.emailjs.com;" />\n`;
-        html = html.replace(/(<meta charset="[^"]*" \/>)/, '$1\n' + cspMeta);
+        // Ensure CSP meta tag exists - add it if it doesn't exist, keep it if it does
+        const cspPattern = /<meta[^>]*http-equiv=["']Content-Security-Policy["'][^>]*>/gi;
+        if (!cspPattern.test(html)) {
+          // Add CSP meta tag right after charset
+          const cspMeta = `    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://api.emailjs.com https://*.emailjs.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.emailjs.com https://*.emailjs.com; frame-src 'self' https://api.emailjs.com;" />\n`;
+          html = html.replace(/(<meta charset="[^"]*" \/>)/, '$1\n' + cspMeta);
+        } else {
+          // Update existing CSP to ensure it has unsafe-eval
+          html = html.replace(cspPattern, `<meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://api.emailjs.com https://*.emailjs.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.emailjs.com https://*.emailjs.com; frame-src 'self' https://api.emailjs.com;" />`);
+        }
         
         // Add routing script to built index.html
         const routingScript = `
