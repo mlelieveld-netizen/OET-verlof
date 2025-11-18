@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { saveLeaveRequest } from '../utils/storage';
-import { getEmployeeByNumber, getAllEmployees } from '../data/employees';
+import { getEmployeeByNumber, getAllEmployees, searchEmployees } from '../data/employees';
 
 const LeaveRequestForm = ({ onSuccess }) => {
   const [formData, setFormData] = useState({
@@ -18,15 +18,23 @@ const LeaveRequestForm = ({ onSuccess }) => {
   const [errors, setErrors] = useState({});
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
+  const [employeeSearchValue, setEmployeeSearchValue] = useState('');
+  const [employeeSuggestions, setEmployeeSuggestions] = useState([]);
+  const [showEmployeeSuggestions, setShowEmployeeSuggestions] = useState(false);
   const typeDropdownRef = useRef(null);
   const scannerRef = useRef(null);
   const employeeInputRef = useRef(null);
+  const employeeSuggestionsRef = useRef(null);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (typeDropdownRef.current && !typeDropdownRef.current.contains(event.target)) {
         setShowTypeDropdown(false);
+      }
+      if (employeeSuggestionsRef.current && !employeeSuggestionsRef.current.contains(event.target) && 
+          employeeInputRef.current && !employeeInputRef.current.contains(event.target)) {
+        setShowEmployeeSuggestions(false);
       }
     };
 
@@ -81,7 +89,12 @@ const LeaveRequestForm = ({ onSuccess }) => {
               // Remove any non-numeric characters
               const employeeNumber = decodedText.replace(/\D/g, '');
               if (employeeNumber) {
-                handleEmployeeNumberChange(employeeNumber);
+                const employee = lookupEmployee(employeeNumber);
+                if (employee) {
+                  handleEmployeeSelect({ number: employeeNumber, name: employee });
+                } else {
+                  handleEmployeeSearchChange(employeeNumber);
+                }
                 
                 // Wait 2 seconds before stopping the scanner
                 setTimeout(() => {
@@ -196,6 +209,9 @@ const LeaveRequestForm = ({ onSuccess }) => {
       employeeName: '',
       reason: '',
     });
+    setEmployeeSearchValue('');
+    setEmployeeSuggestions([]);
+    setShowEmployeeSuggestions(false);
     setErrors({});
     
     if (onSuccess) {
@@ -227,23 +243,66 @@ const LeaveRequestForm = ({ onSuccess }) => {
   // Lookup employee by number
   const lookupEmployee = (employeeNumber) => {
     const employee = getEmployeeByNumber(employeeNumber);
-    return employee || `Medewerker ${employeeNumber}`;
+    return employee || null;
   };
 
-  const handleEmployeeNumberChange = (value) => {
-    // Remove any non-numeric characters for employee number
-    const cleanedValue = value.replace(/\D/g, '');
-    setFormData(prev => ({
-      ...prev,
-      employeeNumber: cleanedValue,
-      employeeName: cleanedValue ? lookupEmployee(cleanedValue) : '',
-    }));
+  // Handle employee search input
+  const handleEmployeeSearchChange = (value) => {
+    setEmployeeSearchValue(value);
+    
+    // Check if input is numeric (employee number)
+    const numericValue = value.replace(/\D/g, '');
+    if (numericValue && numericValue.length >= 3) {
+      const employee = lookupEmployee(numericValue);
+      if (employee) {
+        setFormData(prev => ({
+          ...prev,
+          employeeNumber: numericValue,
+          employeeName: employee,
+        }));
+        setShowEmployeeSuggestions(false);
+        setEmployeeSearchValue(employee);
+        return;
+      }
+    }
+    
+    // Search by name if 3+ characters
+    if (value.length >= 3) {
+      const suggestions = searchEmployees(value);
+      setEmployeeSuggestions(suggestions);
+      setShowEmployeeSuggestions(suggestions.length > 0);
+    } else {
+      setEmployeeSuggestions([]);
+      setShowEmployeeSuggestions(false);
+    }
+    
+    // Update form data
+    if (value.length < 3) {
+      setFormData(prev => ({
+        ...prev,
+        employeeNumber: numericValue || '',
+        employeeName: numericValue ? (lookupEmployee(numericValue) || '') : '',
+      }));
+    }
+    
     if (errors.employeeNumber) {
       setErrors(prev => ({
         ...prev,
         employeeNumber: '',
       }));
     }
+  };
+
+  // Handle employee selection from suggestions
+  const handleEmployeeSelect = (employee) => {
+    setFormData(prev => ({
+      ...prev,
+      employeeNumber: employee.number,
+      employeeName: employee.name,
+    }));
+    setEmployeeSearchValue(employee.name);
+    setShowEmployeeSuggestions(false);
+    setEmployeeSuggestions([]);
   };
 
   // Handle keyboard input for barcode scanners (they often send Enter after scanning)
@@ -297,15 +356,19 @@ const LeaveRequestForm = ({ onSuccess }) => {
             Voor welke collega?*
           </label>
           <div className="space-y-2">
-            <div className="relative">
+            <div className="relative" ref={employeeSuggestionsRef}>
               <input
                 ref={employeeInputRef}
                 type="text"
-                inputMode="numeric"
-                value={formData.employeeNumber}
-                onChange={(e) => handleEmployeeNumberChange(e.target.value)}
+                value={employeeSearchValue || formData.employeeName || formData.employeeNumber}
+                onChange={(e) => handleEmployeeSearchChange(e.target.value)}
                 onKeyDown={handleEmployeeNumberKeyDown}
-                placeholder="Personeelsnummer invoeren of scannen"
+                onFocus={() => {
+                  if (employeeSearchValue.length >= 3 && employeeSuggestions.length > 0) {
+                    setShowEmployeeSuggestions(true);
+                  }
+                }}
+                placeholder="Naam of personeelsnummer invoeren of scannen"
                 autoFocus={false}
                 className={`w-full bg-white border rounded-lg px-4 py-4 pr-12 ${
                   errors.employeeNumber ? 'border-red-500' : 'border-gray-200'
@@ -328,6 +391,28 @@ const LeaveRequestForm = ({ onSuccess }) => {
                   </svg>
                 )}
               </button>
+              
+              {/* Employee suggestions dropdown */}
+              {showEmployeeSuggestions && employeeSuggestions.length > 0 && (
+                <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                  {employeeSuggestions.map((employee) => (
+                    <button
+                      key={employee.number}
+                      type="button"
+                      onClick={() => handleEmployeeSelect(employee)}
+                      className="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 text-left"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-oet-blue flex items-center justify-center text-white font-semibold">
+                        {employee.name.charAt(0)}
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-gray-800 font-medium">{employee.name}</div>
+                        <div className="text-sm text-gray-500">{employee.number}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             {formData.employeeName && (
               <div className="flex items-center gap-3 px-4 py-2 bg-oet-blue-light rounded-lg">
