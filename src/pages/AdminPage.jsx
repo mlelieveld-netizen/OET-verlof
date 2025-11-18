@@ -46,23 +46,21 @@ const AdminPage = ({ token }) => {
       }
     }
     
-    // Generate ICS file and email
-    const employeeEmail = getEmployeeEmail(request.employeeNumber);
-    if (employeeEmail) {
-      const { subject, body } = generateApprovalEmailContent(request);
-      const icsContent = generateICSFile(request);
-      
-      // Create mailto link with ICS attachment (note: mailto doesn't support attachments, 
-      // so we'll provide download link in body)
-      const bodyWithICS = body + '\n\nDownload agenda item: [ICS bestand wordt automatisch gedownload]';
-      const mailtoLink = generateMailtoLink(employeeEmail, subject, bodyWithICS);
-      
-      // Download ICS file
-      downloadICSFile(request);
-      
-      // Open email client (user needs to attach the downloaded ICS file manually)
-      window.location.href = mailtoLink;
-    }
+    // Generate ICS file and email to admin (not employee)
+    // Admin email - you can configure this or get from settings
+    const adminEmail = 'werkplaats@vandenoetelaar-metaal.nl';
+    
+    // Download ICS file first
+    downloadICSFile(request);
+    
+    // Generate email content for admin
+    const { subject, body } = generateApprovalEmailContent(request);
+    const bodyWithICS = body + '\n\nHet ICS bestand is gedownload. Voeg deze toe aan je agenda.';
+    const mailtoLink = generateMailtoLink(adminEmail, subject, bodyWithICS);
+    
+    // Open email client (admin can attach the downloaded ICS file)
+    // Note: mailto doesn't support attachments, so the ICS file is downloaded separately
+    window.location.href = mailtoLink;
   };
 
   const handleReject = async () => {

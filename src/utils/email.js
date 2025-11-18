@@ -104,14 +104,16 @@ export const generateAdminEmailContent = (request, adminLink) => {
   return { subject, body };
 };
 
-// Generate email content for approval notification
+// Generate email content for approval notification (to admin)
 export const generateApprovalEmailContent = (request) => {
-  const subject = `Verlofaanvraag goedgekeurd - ${request.employeeName}`;
-  const body = `Uw verlofaanvraag is goedgekeurd:\n\n` +
+  const subject = `Verlofaanvraag goedgekeurd - ${request.employeeName} - Agenda item`;
+  const body = `De verlofaanvraag is goedgekeurd:\n\n` +
+    `Medewerker: ${request.employeeName}\n` +
     `Type: ${request.type}\n` +
     `Datum: ${new Date(request.startDate).toLocaleDateString('nl-NL')}${request.endDate !== request.startDate ? ` - ${new Date(request.endDate).toLocaleDateString('nl-NL')}` : ''}\n` +
-    `${request.reason ? `Reden: ${request.reason}\n` : ''}\n` +
-    `Het agenda item is bijgevoegd.`;
+    `${request.startTime && request.endTime ? `Tijd: ${request.startTime} - ${request.endTime}\n` : ''}` +
+    `${request.reason ? `Reden: ${request.reason}\n` : ''}\n\n` +
+    `Het agenda item (ICS bestand) is bijgevoegd. Voeg deze toe aan je agenda.`;
   
   return { subject, body };
 };
