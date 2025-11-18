@@ -1,9 +1,23 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { copyFileSync, existsSync } from 'fs'
+import { resolve } from 'path'
 
 export default defineConfig({
   plugins: [
     react(),
+    {
+      name: 'copy-logo',
+      writeBundle() {
+        // This ensures logo.jpg is copied to dist during build
+        // Vite automatically copies public folder contents, but we ensure it's there
+        const logoSource = resolve(__dirname, 'public/logo.jpg');
+        const logoDest = resolve(__dirname, 'dist/logo.jpg');
+        if (existsSync(logoSource)) {
+          copyFileSync(logoSource, logoDest);
+        }
+      }
+    },
     {
       name: 'add-routing-script',
       transformIndexHtml(html) {
