@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { saveLeaveRequest } from '../utils/storage';
 import { getEmployeeByNumber, getAllEmployees, searchEmployees, getEmployeeEmail } from '../data/employees';
-import { generateAdminLink, generateMailtoLink, generateAdminEmailContent } from '../utils/email';
+import { generateAdminLink, sendAdminNotificationEmail } from '../utils/email';
 import { createLeaveRequestIssue } from '../utils/github';
 
 const LeaveRequestForm = ({ onSuccess }) => {
@@ -269,25 +269,35 @@ const LeaveRequestForm = ({ onSuccess }) => {
     // Generate admin link
     const adminLink = generateAdminLink(savedRequest.adminToken);
     
-    // Create GitHub Issue for notification
+    // Send email notification to admin
     try {
-      const issue = await createLeaveRequestIssue(savedRequest, adminLink);
-      if (issue) {
-        // Update request with issue number
-        const requests = getLeaveRequests();
-        const index = requests.findIndex(r => r.id === savedRequest.id);
-        if (index !== -1) {
-          requests[index].githubIssueNumber = issue.number;
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(requests));
-        }
-        
-        alert(`Verlofaanvraag opgeslagen!\n\nGitHub Issue #${issue.number} is aangemaakt.\nBeheerder link: ${adminLink}\n\nDe beheerder ontvangt een notificatie via GitHub.`);
+      const emailResult = await sendAdminNotificationEmail(savedRequest, adminLink);
+      if (emailResult.success) {
+        alert(`Verlofaanvraag opgeslagen!\n\nEmail is verzonden naar werkplaats@vandenoetelaar-metaal.nl\nBeheerder link: ${adminLink}`);
       } else {
-        alert(`Verlofaanvraag opgeslagen!\n\nBeheerder link: ${adminLink}\n\nLet op: GitHub Issue kon niet worden aangemaakt. Deel de link handmatig met de beheerder.`);
+        console.warn('Email kon niet worden verzonden:', emailResult.error);
+        // Fallback to GitHub Issue
+        try {
+          const issue = await createLeaveRequestIssue(savedRequest, adminLink);
+          if (issue) {
+            const requests = getLeaveRequests();
+            const index = requests.findIndex(r => r.id === savedRequest.id);
+            if (index !== -1) {
+              requests[index].githubIssueNumber = issue.number;
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(requests));
+            }
+            alert(`Verlofaanvraag opgeslagen!\n\nGitHub Issue #${issue.number} is aangemaakt.\nBeheerder link: ${adminLink}`);
+          } else {
+            alert(`Verlofaanvraag opgeslagen!\n\nBeheerder link: ${adminLink}\n\nLet op: Email kon niet worden verzonden. Deel de link handmatig met de beheerder.`);
+          }
+        } catch (error) {
+          console.error('Error creating GitHub issue:', error);
+          alert(`Verlofaanvraag opgeslagen!\n\nBeheerder link: ${adminLink}\n\nLet op: Email kon niet worden verzonden. Deel de link handmatig met de beheerder.`);
+        }
       }
     } catch (error) {
-      console.error('Error creating GitHub issue:', error);
-      alert(`Verlofaanvraag opgeslagen!\n\nBeheerder link: ${adminLink}\n\nLet op: GitHub Issue kon niet worden aangemaakt. Deel de link handmatig met de beheerder.`);
+      console.error('Error sending email:', error);
+      alert(`Verlofaanvraag opgeslagen!\n\nBeheerder link: ${adminLink}\n\nLet op: Email kon niet worden verzonden. Deel de link handmatig met de beheerder.`);
     }
     
     // Reset form

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getLeaveRequestByToken, updateLeaveRequest } from '../utils/storage';
 import { getEmployeeEmail } from '../data/employees';
-import { generateICSFile, downloadICSFile, generateMailtoLink, generateApprovalEmailContent } from '../utils/email';
+import { generateICSFile, downloadICSFile, sendApprovalEmail } from '../utils/email';
 import { updateLeaveRequestIssue, addIssueComment } from '../utils/github';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import nl from 'date-fns/locale/nl';
@@ -46,21 +46,25 @@ const AdminPage = ({ token }) => {
       }
     }
     
-    // Generate ICS file and email to admin (not employee)
-    // Admin email - you can configure this or get from settings
-    const adminEmail = 'werkplaats@vandenoetelaar-metaal.nl';
+    // Generate ICS file and send email to admin
+    const icsContent = generateICSFile(request);
     
-    // Download ICS file first
+    // Download ICS file
     downloadICSFile(request);
     
-    // Generate email content for admin
-    const { subject, body } = generateApprovalEmailContent(request);
-    const bodyWithICS = body + '\n\nHet ICS bestand is gedownload. Voeg deze toe aan je agenda.';
-    const mailtoLink = generateMailtoLink(adminEmail, subject, bodyWithICS);
-    
-    // Open email client (admin can attach the downloaded ICS file)
-    // Note: mailto doesn't support attachments, so the ICS file is downloaded separately
-    window.location.href = mailtoLink;
+    // Send email via EmailJS
+    try {
+      const emailResult = await sendApprovalEmail(request, icsContent);
+      if (emailResult.success) {
+        alert('Email is verzonden naar werkplaats@vandenoetelaar-metaal.nl');
+      } else {
+        console.warn('Email kon niet worden verzonden:', emailResult.error);
+        alert('Email kon niet automatisch worden verzonden. Het ICS bestand is gedownload.');
+      }
+    } catch (error) {
+      console.error('Error sending email:', error);
+      alert('Email kon niet automatisch worden verzonden. Het ICS bestand is gedownload.');
+    }
   };
 
   const handleReject = async () => {

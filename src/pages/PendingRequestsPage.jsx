@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getLeaveRequests, updateLeaveRequest } from '../utils/storage';
 import { getEmployeeEmail } from '../data/employees';
-import { downloadICSFile, generateMailtoLink, generateApprovalEmailContent } from '../utils/email';
+import { generateICSFile, downloadICSFile, sendApprovalEmail } from '../utils/email';
 import { updateLeaveRequestIssue, addIssueComment } from '../utils/github';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import nl from 'date-fns/locale/nl';
@@ -38,19 +38,21 @@ const PendingRequestsPage = () => {
       }
     }
     
-    // Generate ICS file and email to admin
-    const adminEmail = 'werkplaats@vandenoetelaar-metaal.nl';
+    // Generate ICS file and send email to admin
+    const icsContent = generateICSFile(request);
     
     // Download ICS file
     downloadICSFile(request);
     
-    // Generate email content for admin
-    const { subject, body } = generateApprovalEmailContent(request);
-    const bodyWithICS = body + '\n\nHet ICS bestand is gedownload. Voeg deze toe aan je agenda.';
-    const mailtoLink = generateMailtoLink(adminEmail, subject, bodyWithICS);
-    
-    // Open email client
-    window.location.href = mailtoLink;
+    // Send email via EmailJS
+    try {
+      const emailResult = await sendApprovalEmail(request, icsContent);
+      if (!emailResult.success) {
+        console.warn('Email kon niet worden verzonden:', emailResult.error);
+      }
+    } catch (error) {
+      console.error('Error sending email:', error);
+    }
     
     // Reload requests
     loadPendingRequests();
