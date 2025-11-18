@@ -82,13 +82,17 @@ const LeaveRequestForm = ({ onSuccess }) => {
               const employeeNumber = decodedText.replace(/\D/g, '');
               if (employeeNumber) {
                 handleEmployeeNumberChange(employeeNumber);
+                
+                // Wait 2 seconds before stopping the scanner
+                setTimeout(() => {
+                  html5QrCode.stop().then(() => {
+                    html5QrCode.clear();
+                    setIsScanning(false);
+                  }).catch(() => {
+                    setIsScanning(false);
+                  });
+                }, 2000);
               }
-              html5QrCode.stop().then(() => {
-                html5QrCode.clear();
-                setIsScanning(false);
-              }).catch(() => {
-                setIsScanning(false);
-              });
             },
             (errorMessage) => {
               // Ignore scanning errors (they happen frequently during scanning)
