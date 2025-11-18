@@ -22,7 +22,23 @@ export default defineConfig({
         }
       }(window.location))
     </script>`
-        return html.replace('</head>', routingScript + '\n  </head>')
+        
+        // Add error handling script
+        const errorScript = `
+    <script>
+      // Fallback error handler
+      window.addEventListener('error', function(e) {
+        console.error('Global error:', e.error);
+        const root = document.getElementById('root');
+        if (root && !root.innerHTML.includes('Error')) {
+          root.innerHTML = '<div style="padding: 20px; color: red;">Error loading app. Please check console for details.</div>';
+        }
+      });
+    </script>`
+        
+        html = html.replace('</head>', routingScript + '\n  </head>')
+        html = html.replace('</body>', errorScript + '\n  </body>')
+        return html
       }
     }
   ],
