@@ -245,39 +245,114 @@ const AdminPage = ({ token }) => {
     }
   };
 
-  const handleRejectClick = () => {
+  const handleRejectClick = (requestId = null) => {
+    if (requestId) {
+      // If requestId is provided, find the request and set it
+      const allRequests = getLeaveRequests();
+      const foundRequest = allRequests.find(r => r && r.id === requestId);
+      if (foundRequest) {
+        setRequest(foundRequest);
+        // Update the URL to include the token
+        const newUrl = `https://mlelieveld-netizen.github.io/OET-verlof/?token=${foundRequest.adminToken}`;
+        window.history.pushState({}, '', newUrl);
+      }
+    }
     setShowRejectModal(true);
   };
 
-  const handleReject = async () => {
-    if (!request) return;
+  const handleApproveFromOverview = async (requestId) => {
+    if (!requestId) return;
+    
+    const allRequests = getLeaveRequests();
+    const foundRequest = allRequests.find(r => r && r.id === requestId);
+    if (!foundRequest) return;
+    
+    // Update the request status
+    updateLeaveRequest(requestId, { status: 'approved' });
+    
+    // Update GitHub Issue if exists
+    if (foundRequest.githubIssueNumber) {
+      try {
+        await updateLeaveRequestIssue(foundRequest.githubIssueNumber, 'approved');
+        await addIssueComment(foundRequest.githubIssueNumber, '✅ **Goedgekeurd**\n\nDe verlofaanvraag is goedgekeurd.');
+      } catch (error) {
+        console.error('Error updating GitHub issue:', error);
+      }
+    }
+    
+    // Generate ICS file and send email to admin
+    const icsContent = generateICSFile(foundRequest);
+    
+    // Send email via EmailJS (ICS is included in email)
+    try {
+      const emailResult = await sendApprovalEmail(foundRequest, icsContent);
+      if (emailResult.success) {
+        downloadICSFile(foundRequest);
+        alert('Email is verzonden naar werkplaats@vandenoetelaar-metaal.nl\n\nHet agenda item (ICS bestand) is bijgevoegd in de email.');
+      } else {
+        console.warn('Email kon niet worden verzonden:', emailResult.error);
+        downloadICSFile(foundRequest);
+        alert('Email kon niet automatisch worden verzonden. Het ICS bestand is gedownload.');
+      }
+    } catch (error) {
+      console.error('Error sending email:', error);
+      downloadICSFile(foundRequest);
+      alert('Email kon niet automatisch worden verzonden. Het ICS bestand is gedownload.');
+    }
+    
+    // Refresh the lists
+    loadApprovedRequests();
+    loadRejectedRequests();
+    loadPendingRequests();
+  };
+
+  const handleReject = async (requestId = null) => {
+    // If requestId is provided, use that instead of the current request
+    let requestToReject = request;
+    if (requestId) {
+      const allRequests = getLeaveRequests();
+      requestToReject = allRequests.find(r => r && r.id === requestId);
+    }
+    
+    if (!requestToReject) return;
     
     if (!rejectionReason.trim()) {
       alert('Geef alstublieft een reden op voor de afwijzing.');
       return;
     }
     
-    updateLeaveRequest(request.id, { 
+    updateLeaveRequest(requestToReject.id, { 
       status: 'rejected',
       rejectionReason: rejectionReason.trim()
     });
     
     // Reload the request to get updated status
-    const updatedRequest = getLeaveRequestByToken(token);
-    if (updatedRequest) {
-      setRequest(updatedRequest);
+    if (token && token !== 'overview') {
+      const updatedRequest = getLeaveRequestByToken(token);
+      if (updatedRequest) {
+        setRequest(updatedRequest);
+      }
+    } else if (requestId) {
+      // If we're in overview mode, just refresh the lists
+      const allRequests = getLeaveRequests();
+      const updatedRequest = allRequests.find(r => r && r.id === requestId);
+      if (updatedRequest) {
+        setRequest(updatedRequest);
+      }
     }
     
     setActionTaken(true);
     setShowRejectModal(false);
+    setRejectionReason(''); // Clear rejection reason
     loadRejectedRequests(); // Refresh rejected overview
     loadApprovedRequests(); // Refresh approved overview
+    loadPendingRequests(); // Refresh pending requests
     
     // Update GitHub Issue if exists
-    if (request.githubIssueNumber) {
+    if (requestToReject.githubIssueNumber) {
       try {
-        await updateLeaveRequestIssue(request.githubIssueNumber, 'rejected');
-        await addIssueComment(request.githubIssueNumber, `❌ **Afgewezen**\n\nReden: ${rejectionReason.trim()}`);
+        await updateLeaveRequestIssue(requestToReject.githubIssueNumber, 'rejected');
+        await addIssueComment(requestToReject.githubIssueNumber, `❌ **Afgewezen**\n\nReden: ${rejectionReason.trim()}`);
       } catch (error) {
         console.error('Error updating GitHub issue:', error);
       }
@@ -765,7 +840,7 @@ const ReviewTab = ({ request, pendingRequests, employeeEmail, handleApprove, han
 };
 
 // Overview Tab Component
-const OverviewTab = ({ approvedRequests, getTypeText, calculateDays, getEmployeeEmail }) => {
+const OverviewTab = ({ approvedRequests, getTypeText, calculateDays, getEmployeeEmail, handleRejectClick, handleApproveFromOverview }) => {
   if (approvedRequests.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow-md p-6 text-center py-12">
@@ -824,6 +899,16 @@ const OverviewTab = ({ approvedRequests, getTypeText, calculateDays, getEmployee
                     Goedgekeurd op: {format(parseISO(req.createdAt), 'd MMMM yyyy HH:mm', { locale: nl })}
                   </p>
                 </div>
+                
+                {/* Action Buttons */}
+                <div className="border-t border-gray-200 pt-4 mt-4">
+                  <button
+                    onClick={() => handleRejectClick(req.id)}
+                    className="w-full bg-red-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-red-700 transition-colors"
+                  >
+                    Alsnog Afwijzen
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -834,7 +919,7 @@ const OverviewTab = ({ approvedRequests, getTypeText, calculateDays, getEmployee
 };
 
 // Rejected Overview Tab Component
-const RejectedOverviewTab = ({ rejectedRequests, getTypeText, calculateDays, getEmployeeEmail }) => {
+const RejectedOverviewTab = ({ rejectedRequests, getTypeText, calculateDays, getEmployeeEmail, handleRejectClick, handleApproveFromOverview }) => {
   if (rejectedRequests.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow-md p-6 text-center py-12">
@@ -898,6 +983,22 @@ const RejectedOverviewTab = ({ rejectedRequests, getTypeText, calculateDays, get
                   <p className="text-xs text-gray-500 mt-2">
                     Afgewezen op: {format(parseISO(req.createdAt), 'd MMMM yyyy HH:mm', { locale: nl })}
                   </p>
+                </div>
+                
+                {/* Action Buttons */}
+                <div className="border-t border-gray-200 pt-4 mt-4">
+                  <button
+                    onClick={() => handleApproveFromOverview(req.id)}
+                    className="w-full bg-green-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-green-700 transition-colors mb-2"
+                  >
+                    Alsnog Goedkeuren
+                  </button>
+                  <button
+                    onClick={() => handleRejectClick(req.id)}
+                    className="w-full bg-red-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-red-700 transition-colors"
+                  >
+                    Reden Wijzigen
+                  </button>
                 </div>
               </div>
             </div>
