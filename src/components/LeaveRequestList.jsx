@@ -18,6 +18,11 @@ const LeaveRequestList = ({ refreshTrigger }) => {
   };
 
   const handleDelete = async (request) => {
+    if (!request || !request.id) {
+      console.error('Invalid request object:', request);
+      return;
+    }
+
     const statusText = request.status === 'pending' 
       ? 'intrekken' 
       : request.status === 'approved' 
@@ -31,16 +36,25 @@ const LeaveRequestList = ({ refreshTrigger }) => {
     // If status is not pending, send notification email to admin
     if (request.status !== 'pending') {
       try {
-        await sendDeletionNotificationEmail(request);
-        console.log('Deletion notification email sent to admin');
+        const emailResult = await sendDeletionNotificationEmail(request);
+        if (emailResult && emailResult.success) {
+          console.log('Deletion notification email sent to admin');
+        } else {
+          console.warn('Email notification failed:', emailResult?.error);
+        }
       } catch (error) {
         console.error('Error sending deletion notification email:', error);
         // Continue with deletion even if email fails
       }
     }
 
-    deleteLeaveRequest(request.id);
-    loadRequests();
+    try {
+      deleteLeaveRequest(request.id);
+      loadRequests();
+    } catch (error) {
+      console.error('Error deleting request:', error);
+      alert('Er is een fout opgetreden bij het verwijderen van de aanvraag.');
+    }
   };
 
 
