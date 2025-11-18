@@ -68,6 +68,32 @@ Klik op de volgende link om de aanvraag te beoordelen:
    - Dit zorgt ervoor dat het ICS bestand als bijlage wordt meegestuurd
 7. Noteer de **Template ID** (bijv. `template_yyyyy`)
 
+### Template 3: Intrekking Notificatie (verlofaanvraag ingetrokken)
+
+1. Maak een nieuwe template
+2. Template naam: "Deletion Notification"
+3. **Belangrijk:** Zet de Content Type op **HTML** (niet Plain Text)
+4. Subject: `Verlofaanvraag ingetrokken - {{employee_name}}`
+5. Content (HTML):
+```html
+<p>Een verlofaanvraag is ingetrokken door de aanvrager:</p>
+
+<p>
+<strong>Medewerker:</strong> {{employee_name}}<br>
+<strong>Type:</strong> {{leave_type}}<br>
+<strong>Datum:</strong> {{start_date}}{{#end_date}} - {{end_date}}{{/end_date}}<br>
+{{#start_time}}<strong>Tijd:</strong> {{start_time}} - {{end_time}}<br>{{/start_time}}
+{{#reason}}<strong>Reden (origineel):</strong> {{reason}}<br>{{/reason}}
+</p>
+
+<p><strong>Status van de aanvraag:</strong> De aanvraag was {{previous_status}} voordat deze werd ingetrokken.</p>
+
+<p><em>Let op: Als deze aanvraag al was goedgekeurd, moet deze mogelijk handmatig uit de agenda worden verwijderd.</em></p>
+```
+6. Noteer de **Template ID** (bijv. `template_zzzzz`)
+
+**Let op:** Als je geen aparte deletion template wilt maken, wordt automatisch de admin template gebruikt als fallback.
+
 ## Stap 4: Public Key ophalen
 
 1. Ga naar "Account" → "General"
@@ -82,6 +108,7 @@ Klik op de volgende link om de aanvraag te beoordelen:
 - `VITE_EMAILJS_SERVICE_ID` = je Service ID
 - `VITE_EMAILJS_TEMPLATE_ID_ADMIN` = Template ID voor admin notificatie
 - `VITE_EMAILJS_TEMPLATE_ID_APPROVAL` = Template ID voor goedkeuring
+- `VITE_EMAILJS_TEMPLATE_ID_DELETION` = Template ID voor intrekking (optioneel, gebruikt admin template als fallback)
 - `VITE_EMAILJS_PUBLIC_KEY` = je Public Key
 
 ## Stap 6: Voor lokale ontwikkeling
@@ -92,8 +119,11 @@ Maak een `.env` bestand in de root directory:
 VITE_EMAILJS_SERVICE_ID=service_xxxxx
 VITE_EMAILJS_TEMPLATE_ID_ADMIN=template_xxxxx
 VITE_EMAILJS_TEMPLATE_ID_APPROVAL=template_yyyyy
+VITE_EMAILJS_TEMPLATE_ID_DELETION=template_zzzzz
 VITE_EMAILJS_PUBLIC_KEY=xxxxxxxxxxxxx
 ```
+
+**Let op:** `VITE_EMAILJS_TEMPLATE_ID_DELETION` is optioneel. Als je deze niet invult, wordt de admin template gebruikt als fallback.
 
 ## Klaar!
 

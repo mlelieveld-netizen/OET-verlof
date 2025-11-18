@@ -7,6 +7,7 @@ import emailjs from '@emailjs/browser';
 const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID || '';
 const EMAILJS_TEMPLATE_ID_ADMIN = import.meta.env.VITE_EMAILJS_TEMPLATE_ID_ADMIN || '';
 const EMAILJS_TEMPLATE_ID_APPROVAL = import.meta.env.VITE_EMAILJS_TEMPLATE_ID_APPROVAL || '';
+const EMAILJS_TEMPLATE_ID_DELETION = import.meta.env.VITE_EMAILJS_TEMPLATE_ID_DELETION || '';
 const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY || '';
 
 // Debug: Log config status (only in development or if explicitly enabled)
@@ -18,6 +19,7 @@ if (typeof window !== 'undefined') {
       PUBLIC_KEY: EMAILJS_PUBLIC_KEY ? '✅ Set' : '❌ Missing',
       TEMPLATE_ADMIN: EMAILJS_TEMPLATE_ID_ADMIN ? '✅ Set' : '❌ Missing',
       TEMPLATE_APPROVAL: EMAILJS_TEMPLATE_ID_APPROVAL ? '✅ Set' : '❌ Missing',
+      TEMPLATE_DELETION: EMAILJS_TEMPLATE_ID_DELETION ? '✅ Set' : '❌ Missing',
       allEnvVars: Object.keys(import.meta.env).filter(k => k.startsWith('VITE_EMAILJS'))
     });
   }
@@ -358,7 +360,10 @@ export const sendApprovalEmail = async (request, icsContent) => {
 
 // Send deletion notification email to admin
 export const sendDeletionNotificationEmail = async (request) => {
-  if (!EMAILJS_TEMPLATE_ID_ADMIN) {
+  // Use deletion template if available, otherwise fallback to admin template
+  const templateId = EMAILJS_TEMPLATE_ID_DELETION || EMAILJS_TEMPLATE_ID_ADMIN;
+  
+  if (!templateId) {
     return { success: false, error: 'EmailJS template not configured' };
   }
 
@@ -374,12 +379,12 @@ export const sendDeletionNotificationEmail = async (request) => {
     end_date: request.endDate !== request.startDate 
       ? new Date(request.endDate).toLocaleDateString('nl-NL')
       : '',
-    reason: `De verlofaanvraag is ingetrokken door de aanvrager. De aanvraag was ${statusText}.`,
-    admin_link: '', // Geen link nodig bij verwijdering
+    start_time: request.startTime || '',
+    end_time: request.endTime || '',
+    reason: request.reason || '',
+    previous_status: statusText,
   };
 
-  // Use admin template but we'll need to customize the subject
-  // For now, we'll use the same template but the reason field will contain the deletion message
-  return await sendEmail(EMAILJS_TEMPLATE_ID_ADMIN, templateParams);
+  return await sendEmail(templateId, templateParams);
 };
 

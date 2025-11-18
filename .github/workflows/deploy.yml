@@ -36,6 +36,7 @@ jobs:
           VITE_EMAILJS_PUBLIC_KEY: ${{ secrets.VITE_EMAILJS_PUBLIC_KEY }}
           VITE_EMAILJS_TEMPLATE_ID_ADMIN: ${{ secrets.VITE_EMAILJS_TEMPLATE_ID_ADMIN }}
           VITE_EMAILJS_TEMPLATE_ID_APPROVAL: ${{ secrets.VITE_EMAILJS_TEMPLATE_ID_APPROVAL }}
+          VITE_EMAILJS_TEMPLATE_ID_DELETION: ${{ secrets.VITE_EMAILJS_TEMPLATE_ID_DELETION }}
         run: npm run build
       
       - name: Setup Pages

@@ -39,7 +39,10 @@ Voor het versturen van emails heb je een EmailJS account nodig (gratis):
 
 3. **Maak Email Templates**:
    - Ga naar "Email Templates"
-   - Maak 2 templates aan (zie `EMAILJS_SETUP.md` voor details)
+   - Maak 2-3 templates aan (zie `EMAILJS_SETUP.md` voor details):
+     - Admin notificatie (verplicht)
+     - Goedkeuring notificatie (verplicht)
+     - Intrekking notificatie (optioneel, gebruikt admin template als fallback)
    - Noteer de **Template IDs**
 
 4. **Haal Public Key op**:
@@ -53,6 +56,7 @@ Voor het versturen van emails heb je een EmailJS account nodig (gratis):
      - `VITE_EMAILJS_PUBLIC_KEY` = je Public Key
      - `VITE_EMAILJS_TEMPLATE_ID_ADMIN` = Template ID voor admin notificatie
      - `VITE_EMAILJS_TEMPLATE_ID_APPROVAL` = Template ID voor goedkeuring
+     - `VITE_EMAILJS_TEMPLATE_ID_DELETION` = Template ID voor intrekking (optioneel)
 
 6. **Voor lokale ontwikkeling**:
    - Maak een `.env` bestand in de root directory
@@ -62,7 +66,9 @@ Voor het versturen van emails heb je een EmailJS account nodig (gratis):
      VITE_EMAILJS_PUBLIC_KEY=xxxxxxxxxxxxx
      VITE_EMAILJS_TEMPLATE_ID_ADMIN=template_xxxxx
      VITE_EMAILJS_TEMPLATE_ID_APPROVAL=template_yyyyy
+     VITE_EMAILJS_TEMPLATE_ID_DELETION=template_zzzzz
      ```
+     **Let op:** `VITE_EMAILJS_TEMPLATE_ID_DELETION` is optioneel. Als je deze niet invult, wordt de admin template gebruikt als fallback.
    - Het `.env` bestand staat al in `.gitignore` en wordt niet gecommit
 
 **Zie `EMAILJS_SETUP.md` voor gedetailleerde instructies.**
