@@ -156,6 +156,7 @@ const AdminPage = ({ token }) => {
     return types[type] || type;
   };
 
+  // Loading state
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -167,18 +168,15 @@ const AdminPage = ({ token }) => {
     );
   }
 
-  if (error || (!request && !loading)) {
+  // Error state or no request found
+  if (error || !request) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-md p-6 max-w-md w-full">
           <div className="text-red-600 text-5xl mb-4 text-center">⚠️</div>
           <h1 className="text-2xl font-bold text-gray-800 mb-2 text-center">Fout</h1>
           <div className="text-gray-600 mb-4 text-center">
-            {error ? (
-              <p>{error}</p>
-            ) : (
-              <p>Verlofaanvraag niet gevonden</p>
-            )}
+            {error ? <p>{error}</p> : <p>Verlofaanvraag niet gevonden</p>}
           </div>
           <div className="text-sm text-gray-500 mb-4 p-3 bg-gray-50 rounded">
             <p className="font-medium mb-2">Mogelijke oplossingen:</p>
@@ -199,39 +197,22 @@ const AdminPage = ({ token }) => {
     );
   }
 
-  if (actionTaken && request) {
+  // Action taken state
+  if (actionTaken) {
+    const statusText = request.status === 'approved' ? 'goedgekeurd' : 'afgewezen';
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-md p-6 max-w-md w-full text-center">
           <div className="text-green-600 text-5xl mb-4">✓</div>
           <h1 className="text-2xl font-bold text-gray-800 mb-2">Actie uitgevoerd</h1>
           <p className="text-gray-600">
-            De verlofaanvraag is {request.status === 'approved' ? 'goedgekeurd' : 'afgewezen'}.
+            De verlofaanvraag is {statusText}.
           </p>
           {request.status === 'approved' && (
             <p className="text-sm text-gray-500 mt-2">
               Het agenda item is gedownload. Voeg deze toe aan uw email.
             </p>
           )}
-        </div>
-      </div>
-    );
-  }
-
-  // Safety check: if no request after loading, show error
-  if (!request) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-md p-6 max-w-md w-full">
-          <div className="text-red-600 text-5xl mb-4 text-center">⚠️</div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-2 text-center">Fout</h1>
-          <p className="text-gray-600 text-center mb-4">Verlofaanvraag niet gevonden</p>
-          <button
-            onClick={() => window.location.href = 'https://mlelieveld-netizen.github.io/OET-verlof/'}
-            className="w-full bg-oet-blue text-white py-2 px-4 rounded-lg font-medium hover:bg-oet-blue-dark transition-colors"
-          >
-            Terug naar hoofdpagina
-          </button>
         </div>
       </div>
     );
