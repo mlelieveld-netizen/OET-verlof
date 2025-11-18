@@ -9,18 +9,67 @@ Een moderne webapplicatie voor het aanvragen en beheren van verlofaanvragen.
 - 📅 **Kalenderweergave**: Visuele kalender met alle verlofaanvragen
 - 🔄 **Statusbeheer**: Goedkeuren, afwijzen of verwijderen van aanvragen
 - 💾 **Lokale opslag**: Data wordt opgeslagen in de browser (localStorage)
-- 📧 **GitHub Issues Notificaties**: Automatische email notificaties via GitHub
+- 📧 **Email Notificaties**: Automatische email notificaties via EmailJS (Gmail)
 
-## 📧 Email Notificaties via GitHub (GRATIS!)
+## 📧 Email Notificaties via EmailJS
 
-De app gebruikt **GitHub Issues** voor notificaties. Dit is **volledig gratis** en vereist geen betaalde email services!
+De app gebruikt **EmailJS** voor het automatisch versturen van emails via Gmail. Dit is **gratis** (200 emails per maand) en werkt direct vanuit de browser!
 
 ### Hoe het werkt:
 
-1. **Bij verlofaanvraag**: Er wordt automatisch een GitHub Issue aangemaakt
-2. **Email notificatie**: GitHub stuurt automatisch een email naar alle repository watchers/owners
-3. **Beheerder link**: In de issue staat een directe link naar de beheerderspagina
-4. **Bij goedkeuring/afwijzing**: De issue wordt automatisch gesloten en bijgewerkt
+1. **Bij verlofaanvraag**: Er wordt automatisch een email verzonden naar de beheerder
+2. **Email notificatie**: De beheerder ontvangt een email met alle details en een directe link
+3. **Beheerder link**: In de email staat een directe link naar de beheerderspagina
+4. **Bij goedkeuring**: De beheerder ontvangt een email met een agenda item (ICS bestand)
+
+### EmailJS Setup:
+
+Voor het versturen van emails heb je een EmailJS account nodig (gratis):
+
+1. **Maak een EmailJS account aan**:
+   - Ga naar: https://www.emailjs.com/
+   - Maak een gratis account aan (200 emails per maand gratis)
+   - Log in
+
+2. **Configureer Gmail Service**:
+   - Ga naar "Email Services" in het dashboard
+   - Klik op "Add New Service" → Kies "Gmail"
+   - Koppel je Gmail account
+   - Noteer de **Service ID** (bijv. `service_xxxxx`)
+
+3. **Maak Email Templates**:
+   - Ga naar "Email Templates"
+   - Maak 2 templates aan (zie `EMAILJS_SETUP.md` voor details)
+   - Noteer de **Template IDs**
+
+4. **Haal Public Key op**:
+   - Ga naar "Account" → "General"
+   - Kopieer je **Public Key**
+
+5. **Configureer voor GitHub Pages**:
+   - Ga naar: https://github.com/mlelieveld-netizen/OET-verlof/settings/secrets/actions
+   - Voeg de volgende secrets toe:
+     - `VITE_EMAILJS_SERVICE_ID` = je Service ID
+     - `VITE_EMAILJS_PUBLIC_KEY` = je Public Key
+     - `VITE_EMAILJS_TEMPLATE_ID_ADMIN` = Template ID voor admin notificatie
+     - `VITE_EMAILJS_TEMPLATE_ID_APPROVAL` = Template ID voor goedkeuring
+
+6. **Voor lokale ontwikkeling**:
+   - Maak een `.env` bestand in de root directory
+   - Voeg toe:
+     ```
+     VITE_EMAILJS_SERVICE_ID=service_xxxxx
+     VITE_EMAILJS_PUBLIC_KEY=xxxxxxxxxxxxx
+     VITE_EMAILJS_TEMPLATE_ID_ADMIN=template_xxxxx
+     VITE_EMAILJS_TEMPLATE_ID_APPROVAL=template_yyyyy
+     ```
+   - Het `.env` bestand staat al in `.gitignore` en wordt niet gecommit
+
+**Zie `EMAILJS_SETUP.md` voor gedetailleerde instructies.**
+
+### GitHub Issues (Optioneel - fallback):
+
+Als EmailJS niet werkt, wordt er automatisch een GitHub Issue aangemaakt als fallback.
 
 ### Setup (Optioneel - voor automatische Issue creatie):
 
@@ -69,7 +118,7 @@ npm install
 npm run dev
 ```
 
-3. Open de applicatie in je browser (meestal op http://localhost:5173)
+3. Open de applicatie in je browser (meestal op http://localhost:5173/OET-verlof/)
 
 ## Build voor productie
 
@@ -86,7 +135,8 @@ De gebouwde bestanden staan in de `dist` map.
 - **Tailwind CSS** - Styling
 - **date-fns** - Datum manipulatie en formatting
 - **localStorage** - Data opslag
-- **GitHub Issues API** - Email notificaties (gratis!)
+- **EmailJS** - Email notificaties via Gmail (gratis!)
+- **GitHub Issues API** - Fallback notificaties (optioneel)
 
 ## Gebruik
 

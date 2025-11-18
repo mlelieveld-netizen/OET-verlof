@@ -276,6 +276,7 @@ const LeaveRequestForm = ({ onSuccess }) => {
         alert(`Verlofaanvraag opgeslagen!\n\nEmail is verzonden naar werkplaats@vandenoetelaar-metaal.nl\nBeheerder link: ${adminLink}`);
       } else {
         console.warn('Email kon niet worden verzonden:', emailResult.error);
+        console.warn('Email result details:', emailResult);
         // Fallback to GitHub Issue
         try {
           const issue = await createLeaveRequestIssue(savedRequest, adminLink);

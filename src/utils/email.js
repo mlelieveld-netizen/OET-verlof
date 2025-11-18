@@ -16,18 +16,50 @@ if (EMAILJS_PUBLIC_KEY) {
 
 // Generate admin approval link
 export const generateAdminLink = (adminToken) => {
-  const baseUrl = window.location.origin + window.location.pathname.replace(/\/$/, '');
-  // Remove trailing slash if present
-  const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
-  return `${cleanBaseUrl}?token=${adminToken}`;
+  // Use origin + base path, ensuring we don't double the path
+  const origin = window.location.origin;
+  let basePath = window.location.pathname;
+  
+  // Remove trailing slash
+  basePath = basePath.replace(/\/$/, '');
+  
+  // If pathname already contains /OET-verlof, use it as is
+  // Otherwise, add /OET-verlof
+  if (!basePath.includes('/OET-verlof')) {
+    basePath = '/OET-verlof';
+  } else {
+    // If pathname is something like /OET-verlof/something, use just /OET-verlof
+    const match = basePath.match(/^(\/OET-verlof)/);
+    if (match) {
+      basePath = match[1];
+    }
+  }
+  
+  return `${origin}${basePath}?token=${adminToken}`;
 };
 
 // Generate pending requests page link
 export const generatePendingPageLink = () => {
-  const baseUrl = window.location.origin + window.location.pathname.replace(/\/$/, '');
-  // Remove trailing slash if present
-  const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
-  return `${cleanBaseUrl}?page=pending`;
+  // Use origin + base path, ensuring we don't double the path
+  const origin = window.location.origin;
+  let basePath = window.location.pathname;
+  
+  // Remove trailing slash
+  basePath = basePath.replace(/\/$/, '');
+  
+  // If pathname already contains /OET-verlof, use it as is
+  // Otherwise, add /OET-verlof
+  if (!basePath.includes('/OET-verlof')) {
+    basePath = '/OET-verlof';
+  } else {
+    // If pathname is something like /OET-verlof/something, use just /OET-verlof
+    const match = basePath.match(/^(\/OET-verlof)/);
+    if (match) {
+      basePath = match[1];
+    }
+  }
+  
+  return `${origin}${basePath}?page=pending`;
 };
 
 // Generate ICS calendar file content
@@ -140,21 +172,51 @@ export const generateApprovalEmailContent = (request) => {
 
 // Send email using EmailJS
 export const sendEmail = async (templateId, templateParams) => {
+  // Debug logging
+  console.log('EmailJS Config Check:', {
+    SERVICE_ID: EMAILJS_SERVICE_ID ? '✅ Set' : '❌ Missing',
+    PUBLIC_KEY: EMAILJS_PUBLIC_KEY ? '✅ Set' : '❌ Missing',
+    TEMPLATE_ID: templateId ? '✅ Set' : '❌ Missing',
+    templateParams: templateParams
+  });
+
   if (!EMAILJS_SERVICE_ID || !EMAILJS_PUBLIC_KEY) {
-    console.warn('EmailJS not configured. Skipping email send.');
-    return { success: false, error: 'EmailJS not configured' };
+    const missing = [];
+    if (!EMAILJS_SERVICE_ID) missing.push('VITE_EMAILJS_SERVICE_ID');
+    if (!EMAILJS_PUBLIC_KEY) missing.push('VITE_EMAILJS_PUBLIC_KEY');
+    console.warn('EmailJS not configured. Missing:', missing);
+    return { success: false, error: `EmailJS not configured. Missing: ${missing.join(', ')}` };
+  }
+
+  if (!templateId) {
+    console.warn('EmailJS template ID not provided');
+    return { success: false, error: 'Template ID not provided' };
   }
 
   try {
+    console.log('Sending email via EmailJS...', {
+      serviceId: EMAILJS_SERVICE_ID,
+      templateId: templateId,
+      publicKey: EMAILJS_PUBLIC_KEY.substring(0, 5) + '...' // Only show first 5 chars for security
+    });
+    
     const response = await emailjs.send(
       EMAILJS_SERVICE_ID,
       templateId,
       templateParams
     );
+    
+    console.log('Email sent successfully:', response);
     return { success: true, response };
   } catch (error) {
     console.error('Error sending email:', error);
-    return { success: false, error: error.message };
+    console.error('Error details:', {
+      code: error.code,
+      text: error.text,
+      message: error.message,
+      status: error.status
+    });
+    return { success: false, error: error.text || error.message || 'Unknown error' };
   }
 };
 
@@ -167,6 +229,7 @@ export const sendAdminNotificationEmail = async (request, adminLink) => {
   const templateParams = {
     to_email: 'werkplaats@vandenoetelaar-metaal.nl',
     to_name: 'Beheerder',
+    from_name: 'Beheerder@verlof',
     employee_name: request.employeeName,
     leave_type: request.type,
     start_date: new Date(request.startDate).toLocaleDateString('nl-NL'),
@@ -189,6 +252,7 @@ export const sendApprovalEmail = async (request, icsContent) => {
   const templateParams = {
     to_email: 'werkplaats@vandenoetelaar-metaal.nl',
     to_name: 'Beheerder',
+    from_name: 'Beheerder@verlof',
     employee_name: request.employeeName,
     leave_type: request.type,
     start_date: new Date(request.startDate).toLocaleDateString('nl-NL'),
