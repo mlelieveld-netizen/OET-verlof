@@ -44,20 +44,28 @@ Klik op de volgende link om de aanvraag te beoordelen:
 
 1. Maak een nieuwe template
 2. Template naam: "Approval Notification"
-3. Subject: `Verlofaanvraag goedgekeurd - {{employee_name}} - Agenda item`
-4. Content:
-```
-De verlofaanvraag is goedgekeurd:
+3. **Belangrijk:** Zet de Content Type op **HTML** (niet Plain Text)
+4. Subject: `Verlofaanvraag goedgekeurd - {{employee_name}} - Agenda item`
+5. Content (HTML):
+```html
+<p>De verlofaanvraag is goedgekeurd:</p>
 
-Medewerker: {{employee_name}}
-Type: {{leave_type}}
-Datum: {{start_date}}{{#end_date}} - {{end_date}}{{/end_date}}
-{{#start_time}}Tijd: {{start_time}} - {{end_time}}{{/start_time}}
-{{#reason}}Reden: {{reason}}{{/reason}}
+<p>
+<strong>Medewerker:</strong> {{employee_name}}<br>
+<strong>Type:</strong> {{leave_type}}<br>
+<strong>Datum:</strong> {{start_date}}{{#end_date}} - {{end_date}}{{/end_date}}<br>
+{{#start_time}}<strong>Tijd:</strong> {{start_time}} - {{end_time}}<br>{{/start_time}}
+{{#reason}}<strong>Reden:</strong> {{reason}}<br>{{/reason}}
+</p>
 
-Het agenda item (ICS bestand) is bijgevoegd. Voeg deze toe aan je agenda.
+<p>Klik op de onderstaande knop om het agenda item (ICS bestand) te downloaden en toe te voegen aan je agenda:</p>
+
+{{{ics_download_link}}}
+
+<p><small>Of kopieer deze link en open hem in je browser: <a href="{{{ics_download_link}}}">Download agenda item</a></small></p>
 ```
-5. Noteer de **Template ID** (bijv. `template_yyyyy`)
+6. **Belangrijk:** Gebruik `{{{ics_download_link}}}` (met 3 accolades) zodat HTML niet wordt ge-escaped
+7. Noteer de **Template ID** (bijv. `template_yyyyy`)
 
 ## Stap 4: Public Key ophalen
 

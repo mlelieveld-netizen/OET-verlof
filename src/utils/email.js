@@ -30,50 +30,17 @@ if (EMAILJS_PUBLIC_KEY) {
 
 // Generate admin approval link
 export const generateAdminLink = (adminToken) => {
-  // Use origin + base path, ensuring we don't double the path
-  const origin = window.location.origin;
-  let basePath = window.location.pathname;
-  
-  // Remove trailing slash
-  basePath = basePath.replace(/\/$/, '');
-  
-  // If pathname already contains /OET-verlof, use it as is
-  // Otherwise, add /OET-verlof
-  if (!basePath.includes('/OET-verlof')) {
-    basePath = '/OET-verlof';
-  } else {
-    // If pathname is something like /OET-verlof/something, use just /OET-verlof
-    const match = basePath.match(/^(\/OET-verlof)/);
-    if (match) {
-      basePath = match[1];
-    }
-  }
-  
-  return `${origin}${basePath}?token=${adminToken}`;
+  // Always use the full production URL for emails
+  // This ensures links work from email clients (mobile Outlook, etc.)
+  const productionUrl = 'https://mlelieveld-netizen.github.io/OET-verlof';
+  return `${productionUrl}?token=${adminToken}`;
 };
 
 // Generate pending requests page link
 export const generatePendingPageLink = () => {
-  // Use origin + base path, ensuring we don't double the path
-  const origin = window.location.origin;
-  let basePath = window.location.pathname;
-  
-  // Remove trailing slash
-  basePath = basePath.replace(/\/$/, '');
-  
-  // If pathname already contains /OET-verlof, use it as is
-  // Otherwise, add /OET-verlof
-  if (!basePath.includes('/OET-verlof')) {
-    basePath = '/OET-verlof';
-  } else {
-    // If pathname is something like /OET-verlof/something, use just /OET-verlof
-    const match = basePath.match(/^(\/OET-verlof)/);
-    if (match) {
-      basePath = match[1];
-    }
-  }
-  
-  return `${origin}${basePath}?page=pending`;
+  // Always use the full production URL for emails
+  const productionUrl = 'https://mlelieveld-netizen.github.io/OET-verlof';
+  return `${productionUrl}?page=pending`;
 };
 
 // Generate ICS calendar file content
@@ -265,6 +232,15 @@ export const sendApprovalEmail = async (request, icsContent) => {
     return { success: false, error: 'EmailJS template not configured' };
   }
 
+  // Convert ICS content to base64 data URI for email attachment
+  // EmailJS doesn't support direct file attachments via send(), so we'll include it as a data URI link
+  const icsBase64 = btoa(unescape(encodeURIComponent(icsContent)));
+  const icsDataUri = `data:text/calendar;base64,${icsBase64}`;
+  const icsFileName = `verlof-${request.employeeName.replace(/\s+/g, '-')}-${request.startDate}.ics`;
+  
+  // Create a download link in the email body
+  const icsDownloadLink = `<a href="${icsDataUri}" download="${icsFileName}" style="display: inline-block; padding: 10px 20px; background-color: #2C3E50; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px;">📅 Download agenda item (.ics)</a>`;
+
   const templateParams = {
     to_email: 'werkplaats@vandenoetelaar-metaal.nl',
     to_name: 'Beheerder',
@@ -279,6 +255,8 @@ export const sendApprovalEmail = async (request, icsContent) => {
     end_time: request.endTime || '',
     reason: request.reason || '',
     ics_content: icsContent,
+    ics_download_link: icsDownloadLink,
+    ics_file_name: icsFileName,
   };
 
   return await sendEmail(EMAILJS_TEMPLATE_ID_APPROVAL, templateParams);

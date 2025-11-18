@@ -19,13 +19,21 @@ const AdminPage = ({ token }) => {
       return;
     }
 
+    // Debug logging
+    console.log('AdminPage: Looking for token:', token);
+    const allRequests = JSON.parse(localStorage.getItem('verlof-aanvragen') || '[]');
+    console.log('AdminPage: All requests:', allRequests);
+    console.log('AdminPage: All tokens:', allRequests.map(r => r.adminToken));
+
     const leaveRequest = getLeaveRequestByToken(token);
     if (!leaveRequest) {
-      setError('Verlofaanvraag niet gevonden');
+      console.error('AdminPage: Request not found for token:', token);
+      setError(`Verlofaanvraag niet gevonden voor token: ${token}`);
       setLoading(false);
       return;
     }
 
+    console.log('AdminPage: Found request:', leaveRequest);
     setRequest(leaveRequest);
     setLoading(false);
   }, [token]);
@@ -49,20 +57,23 @@ const AdminPage = ({ token }) => {
     // Generate ICS file and send email to admin
     const icsContent = generateICSFile(request);
     
-    // Download ICS file
-    downloadICSFile(request);
-    
-    // Send email via EmailJS
+    // Send email via EmailJS (ICS is included in email)
     try {
       const emailResult = await sendApprovalEmail(request, icsContent);
       if (emailResult.success) {
-        alert('Email is verzonden naar werkplaats@vandenoetelaar-metaal.nl');
+        // Also download ICS file locally for backup
+        downloadICSFile(request);
+        alert('Email is verzonden naar werkplaats@vandenoetelaar-metaal.nl\n\nHet agenda item (ICS bestand) is bijgevoegd in de email.');
       } else {
         console.warn('Email kon niet worden verzonden:', emailResult.error);
+        // Fallback: download ICS file
+        downloadICSFile(request);
         alert('Email kon niet automatisch worden verzonden. Het ICS bestand is gedownload.');
       }
     } catch (error) {
       console.error('Error sending email:', error);
+      // Fallback: download ICS file
+      downloadICSFile(request);
       alert('Email kon niet automatisch worden verzonden. Het ICS bestand is gedownload.');
     }
   };
