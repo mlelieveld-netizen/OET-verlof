@@ -89,7 +89,19 @@ const PendingRequestsPage = () => {
   const calculateDays = (startDate, endDate) => {
     const start = parseISO(startDate);
     const end = parseISO(endDate);
-    return differenceInDays(end, start) + 1;
+    let days = 0;
+    let currentDate = new Date(start);
+    
+    // Count only weekdays (Monday-Friday, excluding weekends)
+    while (currentDate <= end) {
+      const dayOfWeek = currentDate.getDay(); // 0 = Sunday, 6 = Saturday
+      if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Skip weekends
+        days++;
+      }
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+    
+    return days;
   };
 
   if (loading) {
