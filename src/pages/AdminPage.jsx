@@ -171,6 +171,13 @@ const AdminPage = ({ token }) => {
       status: 'rejected',
       rejectionReason: rejectionReason.trim()
     });
+    
+    // Reload the request to get updated status
+    const updatedRequest = getLeaveRequestByToken(token);
+    if (updatedRequest) {
+      setRequest(updatedRequest);
+    }
+    
     setActionTaken(true);
     setShowRejectModal(false);
     loadRejectedRequests(); // Refresh rejected overview
