@@ -463,7 +463,7 @@ const AdminPage = ({ token }) => {
     return days;
   };
 
-  const employeeEmail = getEmployeeEmail(request.employeeNumber);
+  const employeeEmail = request ? getEmployeeEmail(request.employeeNumber) : null;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -898,12 +898,14 @@ const OverviewTab = ({ approvedRequests, getTypeText, calculateDays, getEmployee
                 
                 {/* Action Buttons */}
                 <div className="border-t border-gray-200 pt-4 mt-4">
-                  <button
-                    onClick={() => handleRejectClick(req.id)}
-                    className="w-full bg-red-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-red-700 transition-colors"
-                  >
-                    Alsnog Afwijzen
-                  </button>
+                  {handleRejectClick && (
+                    <button
+                      onClick={() => handleRejectClick(req.id)}
+                      className="w-full bg-red-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-red-700 transition-colors"
+                    >
+                      Alsnog Afwijzen
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -983,18 +985,22 @@ const RejectedOverviewTab = ({ rejectedRequests, getTypeText, calculateDays, get
                 
                 {/* Action Buttons */}
                 <div className="border-t border-gray-200 pt-4 mt-4">
-                  <button
-                    onClick={() => handleApproveFromOverview(req.id)}
-                    className="w-full bg-green-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-green-700 transition-colors mb-2"
-                  >
-                    Alsnog Goedkeuren
-                  </button>
-                  <button
-                    onClick={() => handleRejectClick(req.id)}
-                    className="w-full bg-red-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-red-700 transition-colors"
-                  >
-                    Reden Wijzigen
-                  </button>
+                  {handleApproveFromOverview && (
+                    <button
+                      onClick={() => handleApproveFromOverview(req.id)}
+                      className="w-full bg-green-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-green-700 transition-colors mb-2"
+                    >
+                      Alsnog Goedkeuren
+                    </button>
+                  )}
+                  {handleRejectClick && (
+                    <button
+                      onClick={() => handleRejectClick(req.id)}
+                      className="w-full bg-red-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-red-700 transition-colors"
+                    >
+                      Reden Wijzigen
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
