@@ -18,11 +18,11 @@ function App() {
       <header className="bg-oet-blue text-white shadow-md">
         <div className="max-w-md mx-auto">
           {/* Logo Banner - Centered and larger */}
-          <div className="flex justify-center items-center py-4 px-4">
+          <div className="flex justify-center items-center py-5 px-4">
             <img 
               src="/OET-verlof/logo.jpg" 
               alt="OET Logo" 
-              className="h-24 w-auto object-contain mx-auto"
+              className="h-28 w-auto object-contain mx-auto"
             />
           </div>
           {/* Navigation Header */}
