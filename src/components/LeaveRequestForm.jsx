@@ -1,12 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
 import { saveLeaveRequest } from '../utils/storage';
+import { getEmployeeByNumber, getAllEmployees } from '../data/employees';
 
 const LeaveRequestForm = ({ onSuccess }) => {
   const [formData, setFormData] = useState({
     startDate: '',
     endDate: '',
+    startTime: '',
+    endTime: '',
     type: 'adv',
     duration: 'dag',
+    employeeNumber: '',
     employeeName: '',
     reason: '',
   });
@@ -35,47 +39,71 @@ const LeaveRequestForm = ({ onSuccess }) => {
   // Handle barcode scanning
   const startBarcodeScan = async () => {
     try {
-      const { Html5Qrcode } = await import('html5-qrcode');
+      const { Html5Qrcode, Html5QrcodeSupportedFormats } = await import('html5-qrcode');
       
       if (isScanning) {
         // Stop scanning
         if (scannerRef.current) {
-          await scannerRef.current.stop();
-          scannerRef.current.clear();
+          try {
+            await scannerRef.current.stop();
+            scannerRef.current.clear();
+          } catch (e) {
+            console.log('Error stopping scanner:', e);
+          }
           setIsScanning(false);
         }
         return;
       }
 
       setIsScanning(true);
-      const html5QrCode = new Html5Qrcode("barcode-scanner");
-      scannerRef.current = html5QrCode;
+      
+      // Wait a bit for the DOM to update
+      setTimeout(async () => {
+        try {
+          const html5QrCode = new Html5Qrcode("barcode-scanner");
+          scannerRef.current = html5QrCode;
 
-      await html5QrCode.start(
-        { facingMode: "environment" },
-        {
-          fps: 10,
-          qrbox: { width: 250, height: 250 }
-        },
-        (decodedText) => {
-          // Barcode scanned successfully
-          setFormData(prev => ({ 
-            ...prev, 
-            employeeNumber: decodedText,
-            employeeName: `Medewerker ${decodedText}` // You can replace this with actual lookup
-          }));
-          html5QrCode.stop();
-          html5QrCode.clear();
+          await html5QrCode.start(
+            { facingMode: "environment" },
+            {
+              fps: 10,
+              qrbox: { width: 300, height: 300 },
+              formatsToSupport: [
+                Html5QrcodeSupportedFormats.EAN_13,
+                Html5QrcodeSupportedFormats.EAN_8,
+                Html5QrcodeSupportedFormats.CODE_128,
+                Html5QrcodeSupportedFormats.CODE_39,
+                Html5QrcodeSupportedFormats.QR_CODE
+              ]
+            },
+            (decodedText) => {
+              // Barcode scanned successfully - extract number from scanned text
+              // Remove any non-numeric characters
+              const employeeNumber = decodedText.replace(/\D/g, '');
+              if (employeeNumber) {
+                handleEmployeeNumberChange(employeeNumber);
+              }
+              html5QrCode.stop().then(() => {
+                html5QrCode.clear();
+                setIsScanning(false);
+              }).catch(() => {
+                setIsScanning(false);
+              });
+            },
+            (errorMessage) => {
+              // Ignore scanning errors (they happen frequently during scanning)
+            }
+          );
+        } catch (err) {
+          console.error('Error starting scanner:', err);
           setIsScanning(false);
-        },
-        (errorMessage) => {
-          // Ignore scanning errors (they happen frequently during scanning)
+          alert('Kan scanner niet starten. Controleer of camera toegang is verleend.');
         }
-      );
+      }, 100);
     } catch (err) {
-      console.error('Error starting scanner:', err);
+      console.error('Error loading scanner library:', err);
       setIsScanning(false);
-      alert('Kan scanner niet starten. Controleer of camera toegang is verleend.');
+      alert('Kan scanner library niet laden.');
     }
   };
 
@@ -101,6 +129,24 @@ const LeaveRequestForm = ({ onSuccess }) => {
     if (formData.duration === 'meerdere' && !formData.endDate) {
       newErrors.endDate = 'Einddatum is verplicht';
     }
+    if (formData.duration === 'uur') {
+      if (!formData.startTime) {
+        newErrors.startTime = 'Starttijd is verplicht';
+      }
+      if (!formData.endTime) {
+        newErrors.endTime = 'Eindtijd is verplicht';
+      }
+      if (formData.startTime && formData.endTime) {
+        const [startHours, startMinutes] = formData.startTime.split(':').map(Number);
+        const [endHours, endMinutes] = formData.endTime.split(':').map(Number);
+        const startTotal = startHours * 60 + startMinutes;
+        const endTotal = endHours * 60 + endMinutes;
+        
+        if (startTotal >= endTotal && formData.startDate === formData.endDate) {
+          newErrors.endTime = 'Eindtijd moet na starttijd zijn';
+        }
+      }
+    }
     if (formData.startDate && formData.endDate) {
       const start = new Date(formData.startDate);
       const end = new Date(formData.endDate);
@@ -124,6 +170,7 @@ const LeaveRequestForm = ({ onSuccess }) => {
     const requestData = {
       ...formData,
       endDate: formData.duration === 'meerdere' ? formData.endDate : formData.startDate,
+      calculatedHours: formData.duration === 'uur' ? calculateHours() : null,
     };
     
     saveLeaveRequest(requestData);
@@ -132,6 +179,8 @@ const LeaveRequestForm = ({ onSuccess }) => {
     setFormData({
       startDate: '',
       endDate: '',
+      startTime: '',
+      endTime: '',
       type: 'adv',
       duration: 'dag',
       employeeNumber: '',
@@ -167,28 +216,36 @@ const LeaveRequestForm = ({ onSuccess }) => {
     { id: 'persoonlijk', name: 'Persoonlijk', icon: '👤', available: '', color: 'bg-purple-100' },
   ];
 
-  // Mock employee lookup - in production this would be an API call
+  // Lookup employee by number
   const lookupEmployee = (employeeNumber) => {
-    const employees = {
-      '12345': 'Zoe Kleef',
-      '23456': 'Jan Jansen',
-      '34567': 'Marie van der Berg',
-      '45678': 'Piet de Vries',
-    };
-    return employees[employeeNumber] || `Medewerker ${employeeNumber}`;
+    const employee = getEmployeeByNumber(employeeNumber);
+    return employee || `Medewerker ${employeeNumber}`;
   };
 
   const handleEmployeeNumberChange = (value) => {
+    // Remove any non-numeric characters for employee number
+    const cleanedValue = value.replace(/\D/g, '');
     setFormData(prev => ({
       ...prev,
-      employeeNumber: value,
-      employeeName: value ? lookupEmployee(value) : '',
+      employeeNumber: cleanedValue,
+      employeeName: cleanedValue ? lookupEmployee(cleanedValue) : '',
     }));
     if (errors.employeeNumber) {
       setErrors(prev => ({
         ...prev,
         employeeNumber: '',
       }));
+    }
+  };
+
+  // Handle keyboard input for barcode scanners (they often send Enter after scanning)
+  const handleEmployeeNumberKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      // If there's a value, it might be from a barcode scanner
+      if (formData.employeeNumber) {
+        // Already handled by onChange
+      }
     }
   };
 
@@ -199,6 +256,26 @@ const LeaveRequestForm = ({ onSuccess }) => {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
     return `${day}-${month}-${year}`;
+  };
+
+  // Calculate hours between start and end time
+  const calculateHours = () => {
+    if (!formData.startTime || !formData.endTime) return 0;
+    
+    const [startHours, startMinutes] = formData.startTime.split(':').map(Number);
+    const [endHours, endMinutes] = formData.endTime.split(':').map(Number);
+    
+    const startTotalMinutes = startHours * 60 + startMinutes;
+    const endTotalMinutes = endHours * 60 + endMinutes;
+    
+    // Handle case where end time is next day
+    let diffMinutes = endTotalMinutes - startTotalMinutes;
+    if (diffMinutes < 0) {
+      diffMinutes += 24 * 60; // Add 24 hours
+    }
+    
+    const hours = diffMinutes / 60;
+    return Math.round(hours * 10) / 10; // Round to 1 decimal
   };
 
   const selectedType = leaveTypes.find(t => t.id === formData.type) || leaveTypes[0];
@@ -219,7 +296,9 @@ const LeaveRequestForm = ({ onSuccess }) => {
                 inputMode="numeric"
                 value={formData.employeeNumber}
                 onChange={(e) => handleEmployeeNumberChange(e.target.value)}
-                placeholder="Personeelsnummer invoeren"
+                onKeyDown={handleEmployeeNumberKeyDown}
+                placeholder="Personeelsnummer invoeren of scannen"
+                autoFocus={false}
                 className={`w-full bg-white border rounded-lg px-4 py-4 pr-12 ${
                   errors.employeeNumber ? 'border-red-500' : 'border-gray-200'
                 }`}
@@ -258,8 +337,15 @@ const LeaveRequestForm = ({ onSuccess }) => {
           {/* Barcode Scanner */}
           {isScanning && (
             <div className="mt-4">
-              <div id="barcode-scanner" className="w-full rounded-lg overflow-hidden border-2 border-blue-500"></div>
+              <div id="barcode-scanner" className="w-full h-64 rounded-lg overflow-hidden border-2 border-blue-500 bg-black"></div>
               <p className="text-sm text-gray-600 text-center mt-2">Richt de camera op de streepjescode</p>
+              <button
+                type="button"
+                onClick={startBarcodeScan}
+                className="w-full mt-2 bg-red-600 text-white py-2 px-4 rounded-lg font-medium"
+              >
+                Stop scannen
+              </button>
             </div>
           )}
         </div>
@@ -399,6 +485,63 @@ const LeaveRequestForm = ({ onSuccess }) => {
             <p className="mt-1 text-sm text-red-600">{errors.startDate}</p>
           )}
         </div>
+
+        {/* Time Selection - Only show when "Een paar uur" is selected */}
+        {formData.duration === 'uur' && (
+          <>
+            <div className="border-t border-gray-200 my-4"></div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Tijdvlak
+              </label>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">
+                    Starttijd*
+                  </label>
+                  <input
+                    type="time"
+                    name="startTime"
+                    value={formData.startTime}
+                    onChange={handleChange}
+                    className={`w-full bg-white border rounded-lg px-4 py-3 ${
+                      errors.startTime ? 'border-red-500' : 'border-gray-200'
+                    }`}
+                  />
+                  {errors.startTime && (
+                    <p className="mt-1 text-xs text-red-600">{errors.startTime}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">
+                    Eindtijd*
+                  </label>
+                  <input
+                    type="time"
+                    name="endTime"
+                    value={formData.endTime}
+                    onChange={handleChange}
+                    min={formData.startTime}
+                    className={`w-full bg-white border rounded-lg px-4 py-3 ${
+                      errors.endTime ? 'border-red-500' : 'border-gray-200'
+                    }`}
+                  />
+                  {errors.endTime && (
+                    <p className="mt-1 text-xs text-red-600">{errors.endTime}</p>
+                  )}
+                </div>
+              </div>
+              {formData.startTime && formData.endTime && calculateHours() > 0 && (
+                <div className="mt-3 px-4 py-2 bg-blue-50 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-700">Totaal aantal uren:</span>
+                    <span className="text-lg font-bold text-blue-600">{calculateHours()} uur</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </>
+        )}
 
         {/* End Date (only for multiple days) */}
         {formData.duration === 'meerdere' && (
