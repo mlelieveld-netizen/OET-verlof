@@ -349,7 +349,6 @@ const ReviewTab = ({ request, employeeEmail, handleApprove, handleReject, getTyp
               </div>
             </div>
           )}
-        </div>
     </div>
   );
 };
