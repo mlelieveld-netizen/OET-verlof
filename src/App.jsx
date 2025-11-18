@@ -26,21 +26,20 @@ function App() {
             />
           </div>
           {/* Navigation Header */}
-          <div className="px-4 pb-3 flex items-center">
+          <div className="px-4 pb-3 flex items-center justify-center">
             {activeTab !== 'form' && (
               <button
                 onClick={() => setActiveTab('form')}
-                className="mr-4 p-2 -ml-2"
+                className="absolute left-4 p-2"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
             )}
-            <h1 className="text-xl font-bold flex-1 text-center">
+            <h1 className="text-xl font-bold text-center">
               {activeTab === 'form' ? 'Verlof aanvragen' : activeTab === 'list' ? 'Overzicht' : 'Kalender'}
             </h1>
-            {activeTab === 'form' && <div className="w-10"></div>}
           </div>
         </div>
       </header>
@@ -99,6 +98,13 @@ function App() {
           </div>
         )}
       </div>
+
+      {/* Footer */}
+      <footer className="max-w-md mx-auto py-3 px-4 text-center">
+        <p className="text-xs text-gray-500">
+          Last build: {new Date().toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' })} by Mlelieveld
+        </p>
+      </footer>
     </div>
   );
 }
