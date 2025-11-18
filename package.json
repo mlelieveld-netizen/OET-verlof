@@ -4,8 +4,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && npm run copy-404",
+    "build": "vite build && npm run copy-404 && npm run copy-logo",
     "copy-404": "copy 404.html dist\\404.html 2>nul || cp 404.html dist/404.html",
+    "copy-logo": "copy public\\logo.jpg dist\\logo.jpg 2>nul || cp public/logo.jpg dist/logo.jpg",
     "preview": "vite preview"
   },
   "dependencies": {

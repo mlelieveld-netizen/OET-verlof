@@ -20,9 +20,13 @@ function App() {
           {/* Logo Banner */}
           <div className="flex justify-center items-center py-3 px-4">
             <img 
-              src="/logo.jpg" 
+              src="/OET-verlof/logo.jpg" 
               alt="OET Logo" 
               className="h-12 object-contain"
+              onError={(e) => {
+                console.error('Logo failed to load, trying alternative path');
+                e.target.src = '/logo.jpg';
+              }}
             />
           </div>
           {/* Navigation Header */}
