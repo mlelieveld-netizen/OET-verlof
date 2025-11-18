@@ -91,8 +91,9 @@ export default defineConfig({
       }, 5000);
     </script>`
         
-        // Add CSP meta tag
-        const cspMeta = `<meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://api.emailjs.com; style-src 'self' 'unsafe-inline';" />`
+        // Add CSP meta tag (remove existing one first to avoid duplicates)
+        html = html.replace(/<meta[^>]*http-equiv=["']Content-Security-Policy["'][^>]*>/gi, '');
+        const cspMeta = `<meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://api.emailjs.com https://*.emailjs.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.emailjs.com https://*.emailjs.com; frame-src 'self' https://api.emailjs.com;" />`
         html = html.replace('<meta name="viewport"', cspMeta + '\n    <meta name="viewport"')
         
         html = html.replace('</head>', routingScript + '\n  </head>')
