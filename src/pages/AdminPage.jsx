@@ -409,8 +409,8 @@ const AdminPage = ({ token }) => {
     );
   }
 
-  // Action taken state
-  if (actionTaken) {
+  // Action taken state (only show if we have a request)
+  if (actionTaken && request) {
     const statusText = request.status === 'approved' ? 'goedgekeurd' : 'afgewezen';
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
