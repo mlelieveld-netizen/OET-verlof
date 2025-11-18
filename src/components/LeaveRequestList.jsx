@@ -111,10 +111,25 @@ const LeaveRequestList = ({ refreshTrigger }) => {
     let days = 0;
     let currentDate = new Date(start);
     
-    // Count only weekdays (Monday-Friday, excluding weekends)
+    // Helper function to check if date is a holiday
+    const isHoliday = (date) => {
+      const month = date.getMonth(); // 0 = January, 11 = December
+      const day = date.getDate();
+      
+      // 25 December (Christmas)
+      if (month === 11 && day === 25) return true;
+      // 26 December (Boxing Day)
+      if (month === 11 && day === 26) return true;
+      // 1 January (New Year's Day)
+      if (month === 0 && day === 1) return true;
+      
+      return false;
+    };
+    
+    // Count only weekdays (Monday-Friday, excluding weekends and holidays)
     while (currentDate <= end) {
       const dayOfWeek = currentDate.getDay(); // 0 = Sunday, 6 = Saturday
-      if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Skip weekends
+      if (dayOfWeek !== 0 && dayOfWeek !== 6 && !isHoliday(currentDate)) { // Skip weekends and holidays
         days++;
       }
       currentDate.setDate(currentDate.getDate() + 1);
