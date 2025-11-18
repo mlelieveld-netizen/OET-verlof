@@ -37,7 +37,11 @@ export default defineConfig({
         console.error('Global error:', e.error, e.filename, e.lineno, e.colno);
         const root = document.getElementById('root');
         if (root && !root.innerHTML.includes('Error')) {
-          root.innerHTML = '<div style="padding: 20px; color: red; max-width: 600px; margin: 0 auto;"><h2 style="color: red;">Error loading app</h2><p>Please check the browser console (F12) for details.</p><p style="font-size: 12px; margin-top: 10px;">Error: ' + (e.error ? e.error.message : e.message) + '</p></div>';
+          let errorMsg = e.error ? e.error.message : e.message;
+          if (e.filename && e.filename.includes('main.jsx')) {
+            errorMsg = '404 Error: main.jsx not found. This usually means the page is cached. Try: Ctrl+Shift+R (hard refresh) or open in incognito mode.';
+          }
+          root.innerHTML = '<div style="padding: 20px; color: red; max-width: 600px; margin: 0 auto;"><h2 style="color: red;">Error loading app</h2><p>Please check the browser console (F12) for details.</p><p style="font-size: 12px; margin-top: 10px;">Error: ' + errorMsg + '</p><p style="font-size: 12px; margin-top: 10px; color: #666;">File: ' + (e.filename || 'unknown') + '</p><button onclick="window.location.reload(true)" style="margin-top: 10px; padding: 10px 20px; background: #2C3E50; color: white; border: none; border-radius: 5px; cursor: pointer;">Hard Refresh</button></div>';
         }
       });
       
