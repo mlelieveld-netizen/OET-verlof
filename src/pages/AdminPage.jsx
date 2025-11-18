@@ -549,7 +549,7 @@ const AdminPage = ({ token }) => {
             calculateDays={calculateDays}
             getEmployeeEmail={getEmployeeEmail}
             handleRejectClick={handleRejectClick}
-            handleApproveFromOverview={handleApproveFromOverview}
+            handleApproveFromOverview={typeof handleApproveFromOverview === 'function' ? handleApproveFromOverview : undefined}
           />
         ) : activeTab === 'rejected' ? (
           <RejectedOverviewTab 
@@ -558,7 +558,7 @@ const AdminPage = ({ token }) => {
             calculateDays={calculateDays}
             getEmployeeEmail={getEmployeeEmail}
             handleRejectClick={handleRejectClick}
-            handleApproveFromOverview={handleApproveFromOverview}
+            handleApproveFromOverview={typeof handleApproveFromOverview === 'function' ? handleApproveFromOverview : undefined}
           />
         ) : (
           <SickOverviewTab 
