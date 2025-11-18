@@ -22,7 +22,7 @@ function App() {
             <img 
               src="/OET-verlof/logo.jpg" 
               alt="OET Logo" 
-              className="h-12 object-contain"
+              className="h-20 object-contain"
             />
           </div>
           {/* Navigation Header */}

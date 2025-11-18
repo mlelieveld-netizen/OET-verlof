@@ -7,9 +7,9 @@ export default {
   theme: {
     extend: {
       colors: {
-        'oet-blue': '#0066CC', // OET blauwe kleur
-        'oet-blue-dark': '#0052A5',
-        'oet-blue-light': '#E6F2FF',
+        'oet-blue': '#2C3E50', // Antraciet kleur
+        'oet-blue-dark': '#1A252F',
+        'oet-blue-light': '#ECF0F1',
       },
     },
   },
