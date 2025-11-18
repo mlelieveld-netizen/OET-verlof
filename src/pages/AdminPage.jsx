@@ -359,7 +359,7 @@ const ReviewTab = ({ request, employeeEmail, handleApprove, handleRejectClick, g
                   <p className="text-gray-800">
                     {format(parseISO(request.startDate), 'd MMMM yyyy', { locale: nl })}
                     {request.endDate !== request.startDate && 
-                      ` - ${format(parseISO(request.endDate), 'd MMMM yyyy', { locale: nl })}`
+                      ' - ' + format(parseISO(request.endDate), 'd MMMM yyyy', { locale: nl })
                     }
                   </p>
                 </div>
@@ -471,7 +471,7 @@ const OverviewTab = ({ approvedRequests, getTypeText, calculateDays, getEmployee
                     <span className="font-medium">Periode:</span>{' '}
                     {format(parseISO(req.startDate), 'd MMMM yyyy', { locale: nl })}
                     {req.endDate !== req.startDate && 
-                      ` - ${format(parseISO(req.endDate), 'd MMMM yyyy', { locale: nl })}`
+                      ' - ' + format(parseISO(req.endDate), 'd MMMM yyyy', { locale: nl })
                     }
                   </p>
                   <p>
