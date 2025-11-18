@@ -410,7 +410,7 @@ const LeaveRequestForm = ({ onSuccess }) => {
                 }}
                 placeholder="Naam of personeelsnummer invoeren of scannen"
                 autoFocus={false}
-                className={`w-full bg-white border rounded-lg px-4 py-4 pr-12 ${
+                className={`w-full bg-white border rounded-lg px-4 py-4 pr-12 text-sm ${
                   errors.employeeNumber ? 'border-red-500' : 'border-gray-200'
                 }`}
               />
