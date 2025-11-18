@@ -81,7 +81,7 @@ function App() {
       </div>
 
       {/* Content */}
-      <div className="max-w-md mx-auto bg-white min-h-[calc(100vh-120px)]">
+      <div className="max-w-md mx-auto bg-white min-h-[calc(100vh-180px)] pb-4">
         {activeTab === 'form' && (
           <LeaveRequestForm onSuccess={handleFormSuccess} />
         )}
@@ -100,9 +100,9 @@ function App() {
       </div>
 
       {/* Footer */}
-      <footer className="max-w-md mx-auto py-3 px-4 text-center">
+      <footer className="max-w-md mx-auto py-4 px-4 text-center bg-white border-t border-gray-200">
         <p className="text-xs text-gray-500">
-          Last build: {new Date().toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' })} by Mlelieveld
+          Last build {new Date().toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' })} By MLelieveld
         </p>
       </footer>
     </div>
