@@ -26,6 +26,71 @@ const LeaveRequestForm = ({ onSuccess }) => {
   const employeeInputRef = useRef(null);
   const employeeSuggestionsRef = useRef(null);
 
+  // Lookup employee by number
+  const lookupEmployee = (employeeNumber) => {
+    const employee = getEmployeeByNumber(employeeNumber);
+    return employee || null;
+  };
+
+  // Handle employee selection from suggestions
+  const handleEmployeeSelect = (employee) => {
+    setFormData(prev => ({
+      ...prev,
+      employeeNumber: employee.number,
+      employeeName: employee.name,
+    }));
+    setEmployeeSearchValue(employee.name);
+    setShowEmployeeSuggestions(false);
+    setEmployeeSuggestions([]);
+  };
+
+  // Handle employee search input
+  const handleEmployeeSearchChange = (value) => {
+    setEmployeeSearchValue(value);
+    
+    // Check if input is numeric (employee number)
+    const numericValue = value.replace(/\D/g, '');
+    if (numericValue && numericValue.length >= 3) {
+      const employee = lookupEmployee(numericValue);
+      if (employee) {
+        setFormData(prev => ({
+          ...prev,
+          employeeNumber: numericValue,
+          employeeName: employee,
+        }));
+        setShowEmployeeSuggestions(false);
+        setEmployeeSearchValue(employee);
+        return;
+      }
+    }
+    
+    // Search by name if 3+ characters
+    if (value.length >= 3) {
+      const suggestions = searchEmployees(value);
+      setEmployeeSuggestions(suggestions);
+      setShowEmployeeSuggestions(suggestions.length > 0);
+    } else {
+      setEmployeeSuggestions([]);
+      setShowEmployeeSuggestions(false);
+    }
+    
+    // Update form data
+    if (value.length < 3) {
+      setFormData(prev => ({
+        ...prev,
+        employeeNumber: numericValue || '',
+        employeeName: numericValue ? (lookupEmployee(numericValue) || '') : '',
+      }));
+    }
+    
+    if (errors.employeeNumber) {
+      setErrors(prev => ({
+        ...prev,
+        employeeNumber: '',
+      }));
+    }
+  };
+
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -239,71 +304,6 @@ const LeaveRequestForm = ({ onSuccess }) => {
     { id: 'ziekte', name: 'Dokter/Tandarts', icon: '🏥', available: '', color: 'bg-red-100' },
     { id: 'persoonlijk', name: 'Bijzonder verlof', icon: '👤', available: 'Reden opgeven', color: 'bg-purple-100' },
   ];
-
-  // Lookup employee by number
-  const lookupEmployee = (employeeNumber) => {
-    const employee = getEmployeeByNumber(employeeNumber);
-    return employee || null;
-  };
-
-  // Handle employee search input
-  const handleEmployeeSearchChange = (value) => {
-    setEmployeeSearchValue(value);
-    
-    // Check if input is numeric (employee number)
-    const numericValue = value.replace(/\D/g, '');
-    if (numericValue && numericValue.length >= 3) {
-      const employee = lookupEmployee(numericValue);
-      if (employee) {
-        setFormData(prev => ({
-          ...prev,
-          employeeNumber: numericValue,
-          employeeName: employee,
-        }));
-        setShowEmployeeSuggestions(false);
-        setEmployeeSearchValue(employee);
-        return;
-      }
-    }
-    
-    // Search by name if 3+ characters
-    if (value.length >= 3) {
-      const suggestions = searchEmployees(value);
-      setEmployeeSuggestions(suggestions);
-      setShowEmployeeSuggestions(suggestions.length > 0);
-    } else {
-      setEmployeeSuggestions([]);
-      setShowEmployeeSuggestions(false);
-    }
-    
-    // Update form data
-    if (value.length < 3) {
-      setFormData(prev => ({
-        ...prev,
-        employeeNumber: numericValue || '',
-        employeeName: numericValue ? (lookupEmployee(numericValue) || '') : '',
-      }));
-    }
-    
-    if (errors.employeeNumber) {
-      setErrors(prev => ({
-        ...prev,
-        employeeNumber: '',
-      }));
-    }
-  };
-
-  // Handle employee selection from suggestions
-  const handleEmployeeSelect = (employee) => {
-    setFormData(prev => ({
-      ...prev,
-      employeeNumber: employee.number,
-      employeeName: employee.name,
-    }));
-    setEmployeeSearchValue(employee.name);
-    setShowEmployeeSuggestions(false);
-    setEmployeeSuggestions([]);
-  };
 
   // Handle keyboard input for barcode scanners (they often send Enter after scanning)
   const handleEmployeeNumberKeyDown = (e) => {
