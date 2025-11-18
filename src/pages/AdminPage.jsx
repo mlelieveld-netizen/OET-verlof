@@ -16,6 +16,25 @@ const AdminPage = ({ token }) => {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
 
+  // Safety: ensure token is provided
+  if (!token) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-lg shadow-md p-6 max-w-md w-full text-center">
+          <div className="text-red-600 text-5xl mb-4">⚠️</div>
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">Fout</h1>
+          <p className="text-gray-600 mb-4">Geen token opgegeven</p>
+          <button
+            onClick={() => window.location.href = 'https://mlelieveld-netizen.github.io/OET-verlof/'}
+            className="w-full bg-oet-blue text-white py-2 px-4 rounded-lg font-medium hover:bg-oet-blue-dark transition-colors"
+          >
+            Terug naar hoofdpagina
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const loadApprovedRequests = () => {
     const allRequests = getLeaveRequests();
     const approved = allRequests
