@@ -58,13 +58,14 @@ Klik op de volgende link om de aanvraag te beoordelen:
 {{#reason}}<strong>Reden:</strong> {{reason}}<br>{{/reason}}
 </p>
 
-<p>Klik op de onderstaande knop om het agenda item (ICS bestand) te downloaden en toe te voegen aan je agenda:</p>
-
-{{{ics_download_link}}}
-
-<p><small>Of kopieer deze link en open hem in je browser: <a href="{{{ics_download_link}}}">Download agenda item</a></small></p>
+<p>Het agenda item (ICS bestand) is als bijlage toegevoegd aan deze email. Open de bijlage om het toe te voegen aan je agenda.</p>
 ```
-6. **Belangrijk:** Gebruik `{{{ics_download_link}}}` (met 3 accolades) zodat HTML niet wordt ge-escaped
+6. **BELANGRIJK - File Attachment toevoegen:**
+   - Scroll naar beneden in de template editor
+   - Klik op "Add Attachment" of "Bijlage toevoegen"
+   - Kies "Form File Attachment"
+   - Parameter naam: `ics_file` (exact zoals hier, zonder spaties)
+   - Dit zorgt ervoor dat het ICS bestand als bijlage wordt meegestuurd
 7. Noteer de **Template ID** (bijv. `template_yyyyy`)
 
 ## Stap 4: Public Key ophalen

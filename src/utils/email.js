@@ -226,40 +226,134 @@ export const sendAdminNotificationEmail = async (request, adminLink) => {
   return await sendEmail(EMAILJS_TEMPLATE_ID_ADMIN, templateParams);
 };
 
-// Send approval email with ICS attachment
+// Send approval email with ICS attachment using sendForm for file attachment support
 export const sendApprovalEmail = async (request, icsContent) => {
   if (!EMAILJS_TEMPLATE_ID_APPROVAL) {
     return { success: false, error: 'EmailJS template not configured' };
   }
 
-  // Convert ICS content to base64 data URI for email attachment
-  // EmailJS doesn't support direct file attachments via send(), so we'll include it as a data URI link
-  const icsBase64 = btoa(unescape(encodeURIComponent(icsContent)));
-  const icsDataUri = `data:text/calendar;base64,${icsBase64}`;
-  const icsFileName = `verlof-${request.employeeName.replace(/\s+/g, '-')}-${request.startDate}.ics`;
-  
-  // Create a download link in the email body
-  const icsDownloadLink = `<a href="${icsDataUri}" download="${icsFileName}" style="display: inline-block; padding: 10px 20px; background-color: #2C3E50; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px;">📅 Download agenda item (.ics)</a>`;
+  if (!EMAILJS_SERVICE_ID || !EMAILJS_PUBLIC_KEY) {
+    const missing = [];
+    if (!EMAILJS_SERVICE_ID) missing.push('VITE_EMAILJS_SERVICE_ID');
+    if (!EMAILJS_PUBLIC_KEY) missing.push('VITE_EMAILJS_PUBLIC_KEY');
+    const errorMsg = `EmailJS niet geconfigureerd. Ontbrekend: ${missing.join(', ')}.`;
+    console.warn('EmailJS not configured. Missing:', missing);
+    return { success: false, error: errorMsg };
+  }
 
-  const templateParams = {
-    to_email: 'werkplaats@vandenoetelaar-metaal.nl',
-    to_name: 'Beheerder',
-    from_name: 'Beheerder@verlof',
-    employee_name: request.employeeName,
-    leave_type: request.type,
-    start_date: new Date(request.startDate).toLocaleDateString('nl-NL'),
-    end_date: request.endDate !== request.startDate 
-      ? new Date(request.endDate).toLocaleDateString('nl-NL')
-      : '',
-    start_time: request.startTime || '',
-    end_time: request.endTime || '',
-    reason: request.reason || '',
-    ics_content: icsContent,
-    ics_download_link: icsDownloadLink,
-    ics_file_name: icsFileName,
-  };
-
-  return await sendEmail(EMAILJS_TEMPLATE_ID_APPROVAL, templateParams);
+  try {
+    // Create a temporary form element for file attachment
+    const form = document.createElement('form');
+    form.style.display = 'none';
+    
+    // Create ICS file as blob
+    const icsFileName = `verlof-${request.employeeName.replace(/\s+/g, '-')}-${request.startDate}.ics`;
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    const file = new File([blob], icsFileName, { type: 'text/calendar' });
+    
+    // Create file input
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.name = 'ics_file';
+    
+    // Create a DataTransfer object to set the file (modern browsers)
+    // Fallback for older browsers
+    try {
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(file);
+      fileInput.files = dataTransfer.files;
+    } catch (e) {
+      // Fallback: create a FileList manually (for older browsers)
+      console.warn('DataTransfer not supported, using fallback method');
+      // For older browsers, we'll need to use a different approach
+      // Create a FileList-like object
+      const fileList = {
+        0: file,
+        length: 1,
+        item: (index) => index === 0 ? file : null,
+        [Symbol.iterator]: function* () {
+          yield file;
+        }
+      };
+      Object.setPrototypeOf(fileList, FileList.prototype);
+      Object.defineProperty(fileInput, 'files', {
+        value: fileList,
+        writable: false,
+        configurable: false
+      });
+    }
+    
+    // Add other form fields
+    const fields = {
+      to_email: 'werkplaats@vandenoetelaar-metaal.nl',
+      to_name: 'Beheerder',
+      from_name: 'Beheerder@verlof',
+      employee_name: request.employeeName,
+      leave_type: request.type,
+      start_date: new Date(request.startDate).toLocaleDateString('nl-NL'),
+      end_date: request.endDate !== request.startDate 
+        ? new Date(request.endDate).toLocaleDateString('nl-NL')
+        : '',
+      start_time: request.startTime || '',
+      end_time: request.endTime || '',
+      reason: request.reason || '',
+    };
+    
+    // Add all fields to form
+    Object.entries(fields).forEach(([key, value]) => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = key;
+      input.value = value;
+      form.appendChild(input);
+    });
+    
+    form.appendChild(fileInput);
+    document.body.appendChild(form);
+    
+    console.log('Sending email with ICS attachment via sendForm...');
+    
+    // Send using sendForm for file attachment support
+    const response = await emailjs.sendForm(
+      EMAILJS_SERVICE_ID,
+      EMAILJS_TEMPLATE_ID_APPROVAL,
+      form
+    );
+    
+    // Clean up
+    document.body.removeChild(form);
+    
+    console.log('Email with attachment sent successfully:', response);
+    return { success: true, response };
+  } catch (error) {
+    console.error('Error sending email with attachment:', error);
+    console.error('Error details:', {
+      code: error.code,
+      text: error.text,
+      message: error.message,
+      status: error.status
+    });
+    
+    // Fallback: try without attachment using regular send()
+    console.log('Falling back to send() without attachment...');
+    const templateParams = {
+      to_email: 'werkplaats@vandenoetelaar-metaal.nl',
+      to_name: 'Beheerder',
+      from_name: 'Beheerder@verlof',
+      employee_name: request.employeeName,
+      leave_type: request.type,
+      start_date: new Date(request.startDate).toLocaleDateString('nl-NL'),
+      end_date: request.endDate !== request.startDate 
+        ? new Date(request.endDate).toLocaleDateString('nl-NL')
+        : '',
+      start_time: request.startTime || '',
+      end_time: request.endTime || '',
+      reason: request.reason || '',
+      ics_content: icsContent,
+    };
+    
+    return await sendEmail(EMAILJS_TEMPLATE_ID_APPROVAL, templateParams);
+  }
 };
 
 // Send deletion notification email to admin
