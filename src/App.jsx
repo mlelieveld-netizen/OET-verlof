@@ -15,7 +15,7 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header with Logo Banner */}
-      <header className="bg-oet-blue text-white shadow-md">
+      <header className="bg-oet-blue text-white shadow-md relative">
         <div className="max-w-md mx-auto">
           {/* Logo Banner - Centered and larger */}
           <div className="flex justify-center items-center py-5 px-4">
@@ -26,7 +26,7 @@ function App() {
             />
           </div>
           {/* Navigation Header */}
-          <div className="px-4 pb-3 flex items-center justify-center">
+          <div className="px-4 pb-3 flex items-center justify-center relative">
             {activeTab !== 'form' && (
               <button
                 onClick={() => setActiveTab('form')}
