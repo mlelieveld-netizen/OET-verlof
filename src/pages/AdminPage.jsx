@@ -25,32 +25,46 @@ const AdminPage = ({ token }) => {
   };
 
   useEffect(() => {
-    if (!token) {
-      setError('Geen token opgegeven');
+    try {
+      if (!token) {
+        setError('Geen token opgegeven');
+        setLoading(false);
+        return;
+      }
+
+      // Debug logging
+      console.log('AdminPage: Looking for token:', token);
+      
+      // Check if localStorage is available
+      if (typeof Storage === 'undefined') {
+        setError('LocalStorage is niet beschikbaar in deze browser.');
+        setLoading(false);
+        return;
+      }
+
+      const allRequests = JSON.parse(localStorage.getItem('verlof-aanvragen') || '[]');
+      console.log('AdminPage: All requests:', allRequests);
+      console.log('AdminPage: All tokens:', allRequests.map(r => r.adminToken));
+
+      const leaveRequest = getLeaveRequestByToken(token);
+      if (!leaveRequest) {
+        console.error('AdminPage: Request not found for token:', token);
+        setError(`Verlofaanvraag niet gevonden voor token: ${token}\n\nMogelijke oorzaken:\n- De aanvraag is verwijderd\n- Je gebruikt een andere browser/device\n- De link is verlopen`);
+        setLoading(false);
+        return;
+      }
+
+      console.log('AdminPage: Found request:', leaveRequest);
+      setRequest(leaveRequest);
       setLoading(false);
-      return;
-    }
-
-    // Debug logging
-    console.log('AdminPage: Looking for token:', token);
-    const allRequests = JSON.parse(localStorage.getItem('verlof-aanvragen') || '[]');
-    console.log('AdminPage: All requests:', allRequests);
-    console.log('AdminPage: All tokens:', allRequests.map(r => r.adminToken));
-
-    const leaveRequest = getLeaveRequestByToken(token);
-    if (!leaveRequest) {
-      console.error('AdminPage: Request not found for token:', token);
-      setError(`Verlofaanvraag niet gevonden voor token: ${token}`);
+      
+      // Load approved requests for overview tab
+      loadApprovedRequests();
+    } catch (error) {
+      console.error('AdminPage: Error loading request:', error);
+      setError(`Fout bij het laden: ${error.message}`);
       setLoading(false);
-      return;
     }
-
-    console.log('AdminPage: Found request:', leaveRequest);
-    setRequest(leaveRequest);
-    setLoading(false);
-    
-    // Load approved requests for overview tab
-    loadApprovedRequests();
   }, [token]);
 
   // Auto-refresh approved requests every 5 seconds
@@ -296,6 +310,14 @@ const AdminPage = ({ token }) => {
 
 // Review Tab Component
 const ReviewTab = ({ request, employeeEmail, handleApprove, handleRejectClick, getTypeText, calculateDays }) => {
+  if (!request) {
+    return (
+      <div className="bg-white rounded-lg shadow-md p-6 text-center py-12">
+        <p className="text-gray-500">Geen aanvraag gevonden.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
           {/* Employee Info */}
