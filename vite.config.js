@@ -6,12 +6,7 @@ export default defineConfig({
     react(),
     {
       name: 'add-routing-script',
-      transformIndexHtml(html, { path }) {
-        // Fix script src to use base path
-        html = html.replace(
-          /src="\/src\/main\.jsx"/g,
-          'src="/OET-verlof/src/main.jsx"'
-        );
+      transformIndexHtml(html) {
         // Add routing script to built index.html
         const routingScript = `
     <script>
