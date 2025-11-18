@@ -11,8 +11,9 @@ const AdminPage = ({ token }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actionTaken, setActionTaken] = useState(false);
-  const [activeTab, setActiveTab] = useState('review'); // 'review' or 'overview'
+  const [activeTab, setActiveTab] = useState('review'); // 'review', 'overview', or 'rejected'
   const [approvedRequests, setApprovedRequests] = useState([]);
+  const [rejectedRequests, setRejectedRequests] = useState([]);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
 
@@ -41,6 +42,14 @@ const AdminPage = ({ token }) => {
       .filter(r => r.status === 'approved')
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     setApprovedRequests(approved);
+  };
+
+  const loadRejectedRequests = () => {
+    const allRequests = getLeaveRequests();
+    const rejected = allRequests
+      .filter(r => r.status === 'rejected')
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    setRejectedRequests(rejected);
   };
 
   useEffect(() => {
@@ -77,8 +86,9 @@ const AdminPage = ({ token }) => {
       setRequest(leaveRequest);
       setLoading(false);
       
-      // Load approved requests for overview tab
+      // Load approved and rejected requests for overview tabs
       loadApprovedRequests();
+      loadRejectedRequests();
     } catch (error) {
       console.error('AdminPage: Error loading request:', error);
       setError(`Fout bij het laden: ${error.message}`);
@@ -86,10 +96,11 @@ const AdminPage = ({ token }) => {
     }
   }, [token]);
 
-  // Auto-refresh approved requests every 5 seconds
+  // Auto-refresh approved and rejected requests every 5 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       loadApprovedRequests();
+      loadRejectedRequests();
     }, 5000);
 
     return () => clearInterval(interval);
@@ -101,6 +112,7 @@ const AdminPage = ({ token }) => {
     updateLeaveRequest(request.id, { status: 'approved' });
     setActionTaken(true);
     loadApprovedRequests(); // Refresh overview
+    loadRejectedRequests(); // Refresh rejected overview
     
     // Update GitHub Issue if exists
     if (request.githubIssueNumber) {
@@ -154,6 +166,8 @@ const AdminPage = ({ token }) => {
     });
     setActionTaken(true);
     setShowRejectModal(false);
+    loadRejectedRequests(); // Refresh rejected overview
+    loadApprovedRequests(); // Refresh approved overview
     
     // Update GitHub Issue if exists
     if (request.githubIssueNumber) {
@@ -272,7 +286,7 @@ const AdminPage = ({ token }) => {
                 : 'text-gray-600 hover:text-gray-800'
             }`}
           >
-            Beoordelen
+            Openstaand
           </button>
           <button
             onClick={() => setActiveTab('overview')}
@@ -283,6 +297,16 @@ const AdminPage = ({ token }) => {
             }`}
           >
             Overzicht Goedgekeurd ({approvedRequests.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('rejected')}
+            className={`px-6 py-3 font-medium transition-colors ${
+              activeTab === 'rejected'
+                ? 'border-b-2 border-oet-blue text-oet-blue'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            Overzicht Afgekeurd ({rejectedRequests.length})
           </button>
         </div>
       </div>
@@ -298,9 +322,16 @@ const AdminPage = ({ token }) => {
             getTypeText={getTypeText}
             calculateDays={calculateDays}
           />
-        ) : (
+        ) : activeTab === 'overview' ? (
           <OverviewTab 
             approvedRequests={approvedRequests}
+            getTypeText={getTypeText}
+            calculateDays={calculateDays}
+            getEmployeeEmail={getEmployeeEmail}
+          />
+        ) : (
+          <RejectedOverviewTab 
+            rejectedRequests={rejectedRequests}
             getTypeText={getTypeText}
             calculateDays={calculateDays}
             getEmployeeEmail={getEmployeeEmail}
@@ -529,6 +560,81 @@ const OverviewTab = ({ approvedRequests, getTypeText, calculateDays, getEmployee
                   )}
                   <p className="text-xs text-gray-500 mt-2">
                     Goedgekeurd op: {format(parseISO(req.createdAt), 'd MMMM yyyy HH:mm', { locale: nl })}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+// Rejected Overview Tab Component
+const RejectedOverviewTab = ({ rejectedRequests, getTypeText, calculateDays, getEmployeeEmail }) => {
+  if (rejectedRequests.length === 0) {
+    return (
+      <div className="bg-white rounded-lg shadow-md p-6 text-center py-12">
+        <p className="text-gray-500 text-lg">Geen afgewezen verlofaanvragen gevonden.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {rejectedRequests.map((req) => {
+        const empEmail = getEmployeeEmail(req.employeeNumber);
+        return (
+          <div key={req.id} className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-start gap-4 mb-4">
+              <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-700 text-xl font-bold">
+                {req.employeeName.charAt(0)}
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-2">
+                  <h3 className="text-xl font-bold text-gray-800">{req.employeeName}</h3>
+                  <span className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
+                    Afgewezen
+                  </span>
+                  <span className="px-3 py-1 bg-oet-blue-light text-oet-blue-dark rounded-full text-xs font-medium">
+                    {getTypeText(req.type)}
+                  </span>
+                </div>
+                {empEmail && (
+                  <p className="text-sm text-gray-600 mb-3">{empEmail}</p>
+                )}
+                
+                <div className="text-sm text-gray-600 space-y-1">
+                  <p>
+                    <span className="font-medium">Periode:</span>{' '}
+                    {format(parseISO(req.startDate), 'd MMMM yyyy', { locale: nl })}
+                    {req.endDate !== req.startDate && 
+                      ' - ' + format(parseISO(req.endDate), 'd MMMM yyyy', { locale: nl })
+                    }
+                  </p>
+                  <p>
+                    <span className="font-medium">Aantal dagen:</span>{' '}
+                    {calculateDays(req.startDate, req.endDate)} dag(en)
+                  </p>
+                  {req.startTime && req.endTime && (
+                    <p>
+                      <span className="font-medium">Tijd:</span> {req.startTime} - {req.endTime}
+                    </p>
+                  )}
+                  {req.reason && (
+                    <p className="mt-2 text-gray-700">
+                      <span className="font-medium">Reden (origineel):</span> {req.reason}
+                    </p>
+                  )}
+                  {req.rejectionReason && (
+                    <div className="mt-3 pt-3 border-t border-red-200">
+                      <p className="text-sm font-medium text-red-800 mb-1">Reden voor afwijzing:</p>
+                      <p className="text-sm text-red-700">{req.rejectionReason}</p>
+                    </div>
+                  )}
+                  <p className="text-xs text-gray-500 mt-2">
+                    Afgewezen op: {format(parseISO(req.createdAt), 'd MMMM yyyy HH:mm', { locale: nl })}
                   </p>
                 </div>
               </div>
