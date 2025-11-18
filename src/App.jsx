@@ -100,7 +100,7 @@ function App() {
                 : 'text-gray-600 hover:text-gray-800'
             }`}
           >
-            Ziekmeld
+            Ziekmelden
           </button>
           <button
             onClick={() => setActiveTab('list')}
