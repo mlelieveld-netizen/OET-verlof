@@ -167,19 +167,39 @@ const AdminPage = ({ token }) => {
     );
   }
 
-  if (error || !request) {
+  if (error || (!request && !loading)) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-md p-6 max-w-md w-full text-center">
-          <div className="text-red-600 text-5xl mb-4">⚠️</div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">Fout</h1>
-          <p className="text-gray-600">{error || 'Verlofaanvraag niet gevonden'}</p>
+        <div className="bg-white rounded-lg shadow-md p-6 max-w-md w-full">
+          <div className="text-red-600 text-5xl mb-4 text-center">⚠️</div>
+          <h1 className="text-2xl font-bold text-gray-800 mb-2 text-center">Fout</h1>
+          <div className="text-gray-600 mb-4">
+            {error ? (
+              <div className="whitespace-pre-line">{error}</div>
+            ) : (
+              <p>Verlofaanvraag niet gevonden</p>
+            )}
+          </div>
+          <div className="text-sm text-gray-500 mb-4 p-3 bg-gray-50 rounded">
+            <p className="font-medium mb-2">Mogelijke oplossingen:</p>
+            <ul className="list-disc list-inside space-y-1 text-left">
+              <li>Open de link in dezelfde browser waar je de aanvraag hebt ingediend</li>
+              <li>Controleer of de link correct is gekopieerd</li>
+              <li>Probeer de link opnieuw te openen</li>
+            </ul>
+          </div>
+          <button
+            onClick={() => window.location.href = 'https://mlelieveld-netizen.github.io/OET-verlof/'}
+            className="w-full bg-oet-blue text-white py-2 px-4 rounded-lg font-medium hover:bg-oet-blue-dark transition-colors"
+          >
+            Terug naar hoofdpagina
+          </button>
         </div>
       </div>
     );
   }
 
-  if (actionTaken) {
+  if (actionTaken && request) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-md p-6 max-w-md w-full text-center">
