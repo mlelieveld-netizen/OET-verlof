@@ -540,6 +540,7 @@ const AdminPage = ({ token }) => {
             calculateDays={calculateDays}
             getEmployeeEmail={getEmployeeEmail}
             token={token}
+            setActiveTab={setActiveTab}
           />
         ) : activeTab === 'overview' ? (
           <OverviewTab 
@@ -609,10 +610,13 @@ const AdminPage = ({ token }) => {
 };
 
 // Review Tab Component
-const ReviewTab = ({ request, pendingRequests, employeeEmail, handleApprove, handleRejectClick, getTypeText, calculateDays, getEmployeeEmail, token }) => {
+const ReviewTab = ({ request, pendingRequests, employeeEmail, handleApprove, handleRejectClick, getTypeText, calculateDays, getEmployeeEmail, token, setActiveTab }) => {
   // If no specific request (overview mode), show list of pending requests
   if (!request) {
-    if (pendingRequests.length === 0) {
+    // Filter out sick requests from pending requests
+    const filteredPendingRequests = pendingRequests.filter(req => req && req.status !== 'sick');
+    
+    if (filteredPendingRequests.length === 0) {
       return (
         <div className="bg-white rounded-lg shadow-md p-6 text-center py-12">
           <p className="text-gray-500 text-lg">Geen openstaande verlofaanvragen gevonden.</p>
@@ -622,7 +626,7 @@ const ReviewTab = ({ request, pendingRequests, employeeEmail, handleApprove, han
 
     return (
       <div className="space-y-3">
-        {pendingRequests.map((req) => {
+        {filteredPendingRequests.map((req) => {
           if (!req) return null;
           const empEmail = req.employeeNumber ? getEmployeeEmail(req.employeeNumber) : null;
           const adminLink = `https://mlelieveld-netizen.github.io/OET-verlof/?token=${req.adminToken}`;
@@ -687,25 +691,17 @@ const ReviewTab = ({ request, pendingRequests, employeeEmail, handleApprove, han
     );
   }
 
+  // If request is a sick leave, redirect to ZIEK tab (should not happen as it's handled in useEffect, but just in case)
+  if (request.status === 'sick') {
+    // Automatically switch to ZIEK tab
+    if (setActiveTab) {
+      setActiveTab('sick');
+    }
+    return null; // Don't render anything, the tab switch will handle it
+  }
+
   // If request is no longer pending, show message
   if (request.status !== 'pending') {
-    if (request.status === 'sick') {
-      return (
-        <div className="bg-white rounded-lg shadow-md p-6 text-center py-12">
-          <div className="mb-4">
-            <div className="inline-block px-4 py-2 rounded-full text-sm font-medium mb-4 bg-red-100 text-red-800 font-bold">
-              ZIEK
-            </div>
-          </div>
-          <p className="text-gray-600 mb-2">
-            Dit is een ziekmelding.
-          </p>
-          <p className="text-sm text-gray-500">
-            Bekijk deze melding in het tabblad "ZIEK".
-          </p>
-        </div>
-      );
-    }
     return (
       <div className="bg-white rounded-lg shadow-md p-6 text-center py-12">
         <div className="mb-4">
