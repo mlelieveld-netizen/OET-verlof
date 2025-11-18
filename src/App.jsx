@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import LeaveRequestForm from './components/LeaveRequestForm';
 import LeaveRequestList from './components/LeaveRequestList';
 import CalendarView from './components/CalendarView';
+import SickLeaveForm from './components/SickLeaveForm';
 import AdminPage from './pages/AdminPage';
 import PendingRequestsPage from './pages/PendingRequestsPage';
 
@@ -59,7 +60,7 @@ function App() {
           </div>
           {/* Navigation Header */}
           <div className="px-4 pb-3 flex items-center justify-center relative">
-            {activeTab !== 'form' && (
+            {(activeTab !== 'form' && activeTab !== 'sick') && (
               <button
                 onClick={() => setActiveTab('form')}
                 className="absolute left-4 p-2"
@@ -70,7 +71,9 @@ function App() {
               </button>
             )}
             <h1 className="text-xl font-bold text-center">
-              {activeTab === 'form' ? 'Verlof aanvragen' : activeTab === 'list' ? 'Overzicht' : 'Kalender'}
+              {activeTab === 'form' ? 'Verlof aanvragen' : 
+               activeTab === 'sick' ? 'Ziek melden' : 
+               activeTab === 'list' ? 'Overzicht' : 'Kalender'}
             </h1>
           </div>
         </div>
@@ -81,7 +84,7 @@ function App() {
         <div className="max-w-md mx-auto flex">
           <button
             onClick={() => setActiveTab('form')}
-            className={`flex-1 py-3 text-center font-medium transition-colors ${
+            className={`flex-1 py-3 text-center font-medium transition-colors text-xs sm:text-sm ${
               activeTab === 'form'
                 ? 'text-oet-blue border-b-2 border-oet-blue'
                 : 'text-gray-600 hover:text-gray-800'
@@ -90,8 +93,18 @@ function App() {
             Aanvragen
           </button>
           <button
+            onClick={() => setActiveTab('sick')}
+            className={`flex-1 py-3 text-center font-medium transition-colors text-xs sm:text-sm ${
+              activeTab === 'sick'
+                ? 'text-red-600 border-b-2 border-red-600'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            Ziekmeld
+          </button>
+          <button
             onClick={() => setActiveTab('list')}
-            className={`flex-1 py-3 text-center font-medium transition-colors ${
+            className={`flex-1 py-3 text-center font-medium transition-colors text-xs sm:text-sm ${
               activeTab === 'list'
                 ? 'text-oet-blue border-b-2 border-oet-blue'
                 : 'text-gray-600 hover:text-gray-800'
@@ -101,7 +114,7 @@ function App() {
           </button>
           <button
             onClick={() => setActiveTab('calendar')}
-            className={`flex-1 py-3 text-center font-medium transition-colors ${
+            className={`flex-1 py-3 text-center font-medium transition-colors text-xs sm:text-sm ${
               activeTab === 'calendar'
                 ? 'text-oet-blue border-b-2 border-oet-blue'
                 : 'text-gray-600 hover:text-gray-800'
@@ -116,6 +129,10 @@ function App() {
       <div className="max-w-md mx-auto bg-white flex-1 pb-4">
         {activeTab === 'form' && (
           <LeaveRequestForm onSuccess={handleFormSuccess} />
+        )}
+
+        {activeTab === 'sick' && (
+          <SickLeaveForm onSuccess={handleFormSuccess} />
         )}
 
         {activeTab === 'list' && (
