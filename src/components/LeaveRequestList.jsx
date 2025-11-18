@@ -12,6 +12,16 @@ const LeaveRequestList = ({ refreshTrigger }) => {
     loadRequests();
   }, [refreshTrigger]);
 
+  // Auto-refresh every 5 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadRequests();
+    }, 5000); // 5000ms = 5 seconds
+
+    // Cleanup interval on unmount
+    return () => clearInterval(interval);
+  }, []); // Empty dependency array means this runs once on mount
+
   const loadRequests = () => {
     const allRequests = getLeaveRequests();
     setRequests(allRequests.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
