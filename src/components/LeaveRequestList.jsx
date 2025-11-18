@@ -187,6 +187,12 @@ const LeaveRequestList = ({ refreshTrigger }) => {
                         <span className="font-medium">Reden:</span> {request.reason}
                       </p>
                     )}
+                    {request.status === 'rejected' && request.rejectionReason && (
+                      <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded">
+                        <p className="text-sm font-medium text-red-800 mb-1">Reden voor afwijzing:</p>
+                        <p className="text-sm text-red-700">{request.rejectionReason}</p>
+                      </div>
+                    )}
                     <p className="text-xs text-gray-500 mt-2">
                       Aangemaakt op: {format(parseISO(request.createdAt), 'd MMMM yyyy HH:mm', { locale: nl })}
                     </p>

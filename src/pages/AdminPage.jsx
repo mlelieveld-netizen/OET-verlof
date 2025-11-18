@@ -13,6 +13,8 @@ const AdminPage = ({ token }) => {
   const [actionTaken, setActionTaken] = useState(false);
   const [activeTab, setActiveTab] = useState('review'); // 'review' or 'overview'
   const [approvedRequests, setApprovedRequests] = useState([]);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState('');
 
   const loadApprovedRequests = () => {
     const allRequests = getLeaveRequests();
@@ -101,17 +103,30 @@ const AdminPage = ({ token }) => {
     }
   };
 
+  const handleRejectClick = () => {
+    setShowRejectModal(true);
+  };
+
   const handleReject = async () => {
     if (!request) return;
     
-    updateLeaveRequest(request.id, { status: 'rejected' });
+    if (!rejectionReason.trim()) {
+      alert('Geef alstublieft een reden op voor de afwijzing.');
+      return;
+    }
+    
+    updateLeaveRequest(request.id, { 
+      status: 'rejected',
+      rejectionReason: rejectionReason.trim()
+    });
     setActionTaken(true);
+    setShowRejectModal(false);
     
     // Update GitHub Issue if exists
     if (request.githubIssueNumber) {
       try {
         await updateLeaveRequestIssue(request.githubIssueNumber, 'rejected');
-        await addIssueComment(request.githubIssueNumber, '❌ **Afgewezen**\n\nDe verlofaanvraag is afgewezen.');
+        await addIssueComment(request.githubIssueNumber, `❌ **Afgewezen**\n\nReden: ${rejectionReason.trim()}`);
       } catch (error) {
         console.error('Error updating GitHub issue:', error);
       }
@@ -226,7 +241,7 @@ const AdminPage = ({ token }) => {
             request={request} 
             employeeEmail={employeeEmail}
             handleApprove={handleApprove}
-            handleReject={handleReject}
+            handleRejectClick={handleRejectClick}
             getTypeText={getTypeText}
             calculateDays={calculateDays}
           />
@@ -239,12 +254,48 @@ const AdminPage = ({ token }) => {
           />
         )}
       </div>
+
+      {/* Rejection Reason Modal */}
+      {showRejectModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <h2 className="text-xl font-bold text-gray-800 mb-4">Reden voor afwijzing</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Geef een reden op waarom deze verlofaanvraag wordt afgewezen. Deze reden wordt getoond aan de aanvrager.
+            </p>
+            <textarea
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+              placeholder="Bijv. Te veel verlofaanvragen in deze periode, onvoldoende personeel beschikbaar, etc."
+              className="w-full h-32 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none"
+              autoFocus
+            />
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowRejectModal(false);
+                  setRejectionReason('');
+                }}
+                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+              >
+                Annuleren
+              </button>
+              <button
+                onClick={handleReject}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
+              >
+                Afwijzen
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 // Review Tab Component
-const ReviewTab = ({ request, employeeEmail, handleApprove, handleReject, getTypeText, calculateDays }) => {
+const ReviewTab = ({ request, employeeEmail, handleApprove, handleRejectClick, getTypeText, calculateDays }) => {
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
           {/* Employee Info */}
@@ -331,7 +382,7 @@ const ReviewTab = ({ request, employeeEmail, handleApprove, handleReject, getTyp
                   Goedkeuren
                 </button>
                 <button
-                  onClick={handleReject}
+                  onClick={handleRejectClick}
                   className="w-full bg-red-600 text-white py-4 px-6 rounded-lg font-semibold text-lg shadow-md hover:bg-red-700 transition-colors"
                 >
                   Afwijzen
@@ -342,10 +393,16 @@ const ReviewTab = ({ request, employeeEmail, handleApprove, handleReject, getTyp
 
           {request.status !== 'pending' && (
             <div className="border-t border-gray-200 pt-6">
-              <div className="bg-gray-100 rounded-lg p-4 text-center">
-                <p className="text-gray-700">
+              <div className="bg-gray-100 rounded-lg p-4">
+                <p className="text-gray-700 text-center mb-2">
                   Deze aanvraag is al {request.status === 'approved' ? 'goedgekeurd' : 'afgewezen'}.
                 </p>
+                {request.status === 'rejected' && request.rejectionReason && (
+                  <div className="mt-3 pt-3 border-t border-gray-300">
+                    <p className="text-sm font-medium text-gray-700 mb-1">Reden voor afwijzing:</p>
+                    <p className="text-sm text-gray-600">{request.rejectionReason}</p>
+                  </div>
+                )}
               </div>
             </div>
           )}
