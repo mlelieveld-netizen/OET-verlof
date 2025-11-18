@@ -158,6 +158,11 @@ const LeaveRequestForm = ({ onSuccess }) => {
         newErrors.endDate = 'Einddatum moet na startdatum zijn';
       }
     }
+    
+    // Reason is required for "Bijzonder verlof"
+    if (formData.type === 'persoonlijk' && !formData.reason.trim()) {
+      newErrors.reason = 'Reden is verplicht voor bijzonder verlof';
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -390,8 +395,21 @@ const LeaveRequestForm = ({ onSuccess }) => {
                     key={type.id}
                     type="button"
                     onClick={() => {
-                      setFormData(prev => ({ ...prev, type: type.id }));
+                      setFormData(prev => ({ 
+                        ...prev, 
+                        type: type.id,
+                        // Clear reason if switching away from "Bijzonder verlof"
+                        reason: type.id === 'persoonlijk' ? prev.reason : ''
+                      }));
                       setShowTypeDropdown(false);
+                      // Clear reason error if switching away from "Bijzonder verlof"
+                      if (type.id !== 'persoonlijk' && errors.reason) {
+                        setErrors(prev => {
+                          const newErrors = { ...prev };
+                          delete newErrors.reason;
+                          return newErrors;
+                        });
+                      }
                     }}
                     className="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
                   >
@@ -572,6 +590,32 @@ const LeaveRequestForm = ({ onSuccess }) => {
               </div>
               {errors.endDate && (
                 <p className="mt-1 text-sm text-red-600">{errors.endDate}</p>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* Reason field (only for Bijzonder verlof) */}
+        {formData.type === 'persoonlijk' && (
+          <>
+            <div className="border-t border-gray-200 my-4"></div>
+            <div>
+              <label htmlFor="reason" className="block text-sm font-medium text-gray-700 mb-2">
+                Reden voor bijzonder verlof*
+              </label>
+              <textarea
+                id="reason"
+                name="reason"
+                value={formData.reason}
+                onChange={handleChange}
+                rows={4}
+                placeholder="Geef hier de reden op voor het bijzonder verlof..."
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-oet-blue focus:border-transparent ${
+                  errors.reason ? 'border-red-500' : 'border-gray-200'
+                }`}
+              />
+              {errors.reason && (
+                <p className="mt-1 text-sm text-red-600">{errors.reason}</p>
               )}
             </div>
           </>
