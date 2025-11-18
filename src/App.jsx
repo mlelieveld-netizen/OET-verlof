@@ -23,10 +23,6 @@ function App() {
               src="/OET-verlof/logo.jpg" 
               alt="OET Logo" 
               className="h-12 object-contain"
-              onError={(e) => {
-                console.error('Logo failed to load, trying alternative path');
-                e.target.src = '/logo.jpg';
-              }}
             />
           </div>
           {/* Navigation Header */}
