@@ -7,7 +7,7 @@ Een moderne webapplicatie voor het aanvragen en beheren van verlofaanvragen.
 - ✅ **Nieuwe verlofaanvraag**: Eenvoudig formulier om verlof aan te vragen
 - 📋 **Overzicht**: Bekijk alle verlofaanvragen met filters
 - 📅 **Kalenderweergave**: Visuele kalender met alle verlofaanvragen
-- 🔄 **Statusbeheer**: Goedkeuren, afwijzen of verwijderen van aanvragen
+- 🔄 **Statusbeheer**: Goedkeuren of afwijzen van aanvragen (alleen via email link voor beheerders)
 - 💾 **Lokale opslag**: Data wordt opgeslagen in de browser (localStorage)
 - 📧 **Email Notificaties**: Automatische email notificaties via EmailJS (Gmail)
 

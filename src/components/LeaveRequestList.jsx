@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
-import { getLeaveRequests, updateLeaveRequest, deleteLeaveRequest } from '../utils/storage';
+import { getLeaveRequests } from '../utils/storage';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import nl from 'date-fns/locale/nl';
-import { generatePendingPageLink } from '../utils/email';
 
 const LeaveRequestList = ({ refreshTrigger }) => {
   const [requests, setRequests] = useState([]);
@@ -17,17 +16,6 @@ const LeaveRequestList = ({ refreshTrigger }) => {
     setRequests(allRequests.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
   };
 
-  const handleStatusChange = (id, newStatus) => {
-    updateLeaveRequest(id, { status: newStatus });
-    loadRequests();
-  };
-
-  const handleDelete = (id) => {
-    if (window.confirm('Weet u zeker dat u deze aanvraag wilt verwijderen?')) {
-      deleteLeaveRequest(id);
-      loadRequests();
-    }
-  };
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -72,35 +60,9 @@ const LeaveRequestList = ({ refreshTrigger }) => {
     return differenceInDays(end, start) + 1;
   };
 
-  const pendingPageLink = generatePendingPageLink();
-  const pendingCount = requests.filter(r => r.status === 'pending').length;
-
   return (
     <div className="bg-white">
       <div className="mb-4">
-        {/* Link to separate pending page */}
-        {pendingCount > 0 && (
-          <div className="mb-4 p-4 bg-oet-blue-light rounded-lg border border-oet-blue">
-            <div className="flex items-center justify-between flex-wrap gap-3">
-              <div>
-                <p className="font-semibold text-oet-blue-dark">
-                  {pendingCount} {pendingCount === 1 ? 'aanvraag' : 'aanvragen'} in behandeling
-                </p>
-                <p className="text-sm text-gray-600 mt-1">
-                  Open de aparte beheerderspagina om alle aanvragen te beoordelen
-                </p>
-              </div>
-              <a
-                href={pendingPageLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-4 py-2 bg-oet-blue text-white rounded-lg font-medium hover:bg-oet-blue-dark transition-colors whitespace-nowrap"
-              >
-                Open Beheerderspagina →
-              </a>
-            </div>
-          </div>
-        )}
 
         <div className="flex gap-2 overflow-x-auto pb-2">
           <button
@@ -193,47 +155,6 @@ const LeaveRequestList = ({ refreshTrigger }) => {
                 </div>
               </div>
 
-              {request.status === 'pending' && (
-                <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-gray-200">
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleStatusChange(request.id, 'approved')}
-                      className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg font-medium active:bg-green-700"
-                    >
-                      Goedkeuren
-                    </button>
-                    <button
-                      onClick={() => handleStatusChange(request.id, 'rejected')}
-                      className="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg font-medium active:bg-red-700"
-                    >
-                      Afwijzen
-                    </button>
-                  </div>
-                  <button
-                    onClick={() => handleDelete(request.id)}
-                    className="w-full py-2 bg-gray-200 text-gray-700 rounded-lg font-medium active:bg-gray-300"
-                  >
-                    Verwijderen
-                  </button>
-                </div>
-              )}
-
-              {request.status !== 'pending' && (
-                <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-gray-200">
-                  <button
-                    onClick={() => handleStatusChange(request.id, 'pending')}
-                    className="w-full py-2 bg-gray-200 text-gray-700 rounded-lg font-medium active:bg-gray-300"
-                  >
-                    Terugzetten
-                  </button>
-                  <button
-                    onClick={() => handleDelete(request.id)}
-                    className="w-full py-2 bg-gray-200 text-gray-700 rounded-lg font-medium active:bg-gray-300"
-                  >
-                    Verwijderen
-                  </button>
-                </div>
-              )}
             </div>
           ))}
         </div>
