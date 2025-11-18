@@ -23,7 +23,17 @@
     </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"></div>
+    <script>
+      // Fallback error handler
+      window.addEventListener('error', function(e) {
+        console.error('Global error:', e.error);
+        const root = document.getElementById('root');
+        if (root && !root.innerHTML.includes('Error')) {
+          root.innerHTML = '<div style="padding: 20px; color: red;">Error loading app. Please check console for details.</div>';
+        }
+      });
+    </script>
   </body>
 </html>
 
