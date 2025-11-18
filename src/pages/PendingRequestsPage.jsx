@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getLeaveRequests, updateLeaveRequest } from '../utils/storage';
 import { getEmployeeEmail } from '../data/employees';
-import { generateICSFile, downloadICSFile, generateMailtoLink, generateApprovalEmailContent } from '../utils/email';
+import { downloadICSFile, generateMailtoLink, generateApprovalEmailContent } from '../utils/email';
 import { updateLeaveRequestIssue, addIssueComment } from '../utils/github';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import nl from 'date-fns/locale/nl';
