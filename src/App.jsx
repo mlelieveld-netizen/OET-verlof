@@ -6,30 +6,18 @@ import SickLeaveForm from './components/SickLeaveForm';
 import AdminPage from './pages/AdminPage';
 import PendingRequestsPage from './pages/PendingRequestsPage';
 
-function App() {
+function App({ requestId }) {
   const [activeTab, setActiveTab] = useState('form');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [adminToken, setAdminToken] = useState(null);
   const [showPendingPage, setShowPendingPage] = useState(false);
 
   useEffect(() => {
-    // Check if we're on admin page or pending page
+    // Check if we're on pending page
     const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('token');
     const page = urlParams.get('page');
-    const admin = urlParams.get('admin');
-    
-    if (token) {
-      setAdminToken(token);
-    }
     
     if (page === 'pending') {
       setShowPendingPage(true);
-    }
-    
-    // If admin parameter is present, show admin overview page
-    if (admin === 'true') {
-      setAdminToken('overview'); // Special token for overview page
     }
     
     // Test if React is working
@@ -44,11 +32,6 @@ function App() {
   // Show pending requests page if page=pending
   if (showPendingPage) {
     return <PendingRequestsPage />;
-  }
-
-  // Show admin page if token is present
-  if (adminToken) {
-    return <AdminPage token={adminToken} />;
   }
 
   return (
