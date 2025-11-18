@@ -37,11 +37,33 @@ const AdminPage = ({ token }) => {
     );
   }
 
+  const [pendingRequests, setPendingRequests] = useState([]);
+
+  const loadPendingRequests = () => {
+    const allRequests = getLeaveRequests();
+    const pending = allRequests
+      .filter(r => r && r.status === 'pending')
+      .sort((a, b) => {
+        try {
+          return new Date(a.createdAt) - new Date(b.createdAt);
+        } catch {
+          return 0;
+        }
+      });
+    setPendingRequests(pending);
+  };
+
   const loadApprovedRequests = () => {
     const allRequests = getLeaveRequests();
     const approved = allRequests
-      .filter(r => r.status === 'approved')
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      .filter(r => r && r.status === 'approved')
+      .sort((a, b) => {
+        try {
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        } catch {
+          return 0;
+        }
+      });
     setApprovedRequests(approved);
   };
 
@@ -95,6 +117,18 @@ const AdminPage = ({ token }) => {
       console.log('AdminPage: All requests:', allRequests);
       console.log('AdminPage: All tokens:', allRequests.map(r => r.adminToken));
 
+      // Special case: if token is 'overview', show overview page without specific request
+      if (token === 'overview') {
+        setRequest(null); // No specific request to review
+        setLoading(false);
+        setActiveTab('review'); // Start with review tab to show pending requests
+        loadPendingRequests();
+        loadApprovedRequests();
+        loadRejectedRequests();
+        loadSickRequests();
+        return;
+      }
+
       const leaveRequest = getLeaveRequestByToken(token);
       if (!leaveRequest) {
         console.error('AdminPage: Request not found for token:', token);
@@ -123,16 +157,19 @@ const AdminPage = ({ token }) => {
     }
   }, [token]);
 
-  // Auto-refresh approved, rejected, and sick requests every 5 seconds
+  // Auto-refresh pending, approved, rejected, and sick requests every 5 seconds
   useEffect(() => {
     const interval = setInterval(() => {
+      if (token === 'overview' || !token) {
+        loadPendingRequests();
+      }
       loadApprovedRequests();
       loadRejectedRequests();
       loadSickRequests();
     }, 5000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [token]);
 
   const handleApprove = async () => {
     if (!request) return;
@@ -380,11 +417,14 @@ const AdminPage = ({ token }) => {
         {activeTab === 'review' ? (
           <ReviewTab 
             request={request} 
+            pendingRequests={pendingRequests}
             employeeEmail={employeeEmail}
             handleApprove={handleApprove}
             handleRejectClick={handleRejectClick}
             getTypeText={getTypeText}
             calculateDays={calculateDays}
+            getEmployeeEmail={getEmployeeEmail}
+            token={token}
           />
         ) : activeTab === 'overview' ? (
           <OverviewTab 
@@ -454,11 +494,80 @@ const AdminPage = ({ token }) => {
 };
 
 // Review Tab Component
-const ReviewTab = ({ request, employeeEmail, handleApprove, handleRejectClick, getTypeText, calculateDays }) => {
+const ReviewTab = ({ request, pendingRequests, employeeEmail, handleApprove, handleRejectClick, getTypeText, calculateDays, getEmployeeEmail, token }) => {
+  // If no specific request (overview mode), show list of pending requests
   if (!request) {
+    if (pendingRequests.length === 0) {
+      return (
+        <div className="bg-white rounded-lg shadow-md p-6 text-center py-12">
+          <p className="text-gray-500 text-lg">Geen openstaande verlofaanvragen gevonden.</p>
+        </div>
+      );
+    }
+
     return (
-      <div className="bg-white rounded-lg shadow-md p-6 text-center py-12">
-        <p className="text-gray-500">Geen aanvraag gevonden.</p>
+      <div className="space-y-3">
+        {pendingRequests.map((req) => {
+          if (!req) return null;
+          const empEmail = req.employeeNumber ? getEmployeeEmail(req.employeeNumber) : null;
+          const adminLink = `https://mlelieveld-netizen.github.io/OET-verlof/?token=${req.adminToken}`;
+          
+          return (
+            <div key={req.id} className="bg-white rounded-lg shadow-md p-6">
+              <div className="flex items-start gap-4 mb-4">
+                <div className="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-700 text-xl font-bold">
+                  {req.employeeName.charAt(0)}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <h3 className="text-xl font-bold text-gray-800">{req.employeeName}</h3>
+                    <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">
+                      In behandeling
+                    </span>
+                    <span className="px-3 py-1 bg-oet-blue-light text-oet-blue-dark rounded-full text-xs font-medium">
+                      {getTypeText(req.type)}
+                    </span>
+                  </div>
+                  {empEmail && (
+                    <p className="text-sm text-gray-600 mb-3">{empEmail}</p>
+                  )}
+                  
+                  <div className="text-sm text-gray-600 space-y-1">
+                    <p>
+                      <span className="font-medium">Periode:</span>{' '}
+                      {format(parseISO(req.startDate), 'd MMMM yyyy', { locale: nl })}
+                      {req.endDate !== req.startDate && 
+                        ' - ' + format(parseISO(req.endDate), 'd MMMM yyyy', { locale: nl })
+                      }
+                    </p>
+                    <p>
+                      <span className="font-medium">Aantal dagen:</span>{' '}
+                      {calculateDays(req.startDate, req.endDate)} dag(en)
+                    </p>
+                    {req.reason && (
+                      <p className="mt-2 text-gray-700">
+                        <span className="font-medium">Reden:</span> {req.reason}
+                      </p>
+                    )}
+                    <p className="text-xs text-gray-500 mt-2">
+                      Aangemaakt op: {format(parseISO(req.createdAt), 'd MMMM yyyy HH:mm', { locale: nl })}
+                    </p>
+                  </div>
+                  
+                  {/* Link to review this specific request */}
+                  <div className="border-t border-gray-200 pt-4 mt-4">
+                    <a
+                      href={adminLink}
+                      className="w-full block text-center bg-oet-blue text-white py-2 px-4 rounded-lg font-medium hover:bg-oet-blue-dark transition-colors"
+                    >
+                      Beoordelen
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
     );
   }

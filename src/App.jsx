@@ -17,6 +17,7 @@ function App() {
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('token');
     const page = urlParams.get('page');
+    const admin = urlParams.get('admin');
     
     if (token) {
       setAdminToken(token);
@@ -24,6 +25,11 @@ function App() {
     
     if (page === 'pending') {
       setShowPendingPage(true);
+    }
+    
+    // If admin parameter is present, show admin overview page
+    if (admin === 'true') {
+      setAdminToken('overview'); // Special token for overview page
     }
     
     // Test if React is working
