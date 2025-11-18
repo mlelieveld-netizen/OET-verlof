@@ -79,7 +79,7 @@ const LeaveRequestList = ({ refreshTrigger }) => {
             onClick={() => setFilter('all')}
             className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
               filter === 'all'
-                ? 'bg-blue-600 text-white'
+                ? 'bg-oet-blue text-white'
                 : 'bg-gray-200 text-gray-700'
             }`}
           >
@@ -89,7 +89,7 @@ const LeaveRequestList = ({ refreshTrigger }) => {
             onClick={() => setFilter('pending')}
             className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
               filter === 'pending'
-                ? 'bg-blue-600 text-white'
+                ? 'bg-oet-blue text-white'
                 : 'bg-gray-200 text-gray-700'
             }`}
           >
@@ -99,7 +99,7 @@ const LeaveRequestList = ({ refreshTrigger }) => {
             onClick={() => setFilter('approved')}
             className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
               filter === 'approved'
-                ? 'bg-blue-600 text-white'
+                ? 'bg-oet-blue text-white'
                 : 'bg-gray-200 text-gray-700'
             }`}
           >
@@ -109,7 +109,7 @@ const LeaveRequestList = ({ refreshTrigger }) => {
             onClick={() => setFilter('rejected')}
             className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
               filter === 'rejected'
-                ? 'bg-blue-600 text-white'
+                ? 'bg-oet-blue text-white'
                 : 'bg-gray-200 text-gray-700'
             }`}
           >
@@ -138,7 +138,7 @@ const LeaveRequestList = ({ refreshTrigger }) => {
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(request.status)}`}>
                       {getStatusText(request.status)}
                     </span>
-                    <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                    <span className="px-3 py-1 bg-oet-blue-light text-oet-blue-dark rounded-full text-xs font-medium">
                       {getTypeText(request.type)}
                     </span>
                   </div>

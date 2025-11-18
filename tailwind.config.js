@@ -5,7 +5,13 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        'oet-blue': '#0066CC', // OET blauwe kleur
+        'oet-blue-dark': '#0052A5',
+        'oet-blue-light': '#E6F2FF',
+      },
+    },
   },
   plugins: [],
 }

@@ -97,10 +97,10 @@ const CalendarView = ({ refreshTrigger }) => {
             <div
               key={day.toISOString()}
               className={`aspect-square border border-gray-200 rounded-lg p-1 ${
-                isToday ? 'bg-blue-50 border-blue-400' : ''
+                isToday ? 'bg-oet-blue-light border-oet-blue' : ''
               }`}
             >
-              <div className={`text-xs font-medium mb-0.5 ${isToday ? 'text-blue-600' : 'text-gray-700'}`}>
+              <div className={`text-xs font-medium mb-0.5 ${isToday ? 'text-oet-blue' : 'text-gray-700'}`}>
                 {format(day, 'd')}
               </div>
               <div className="space-y-0.5">

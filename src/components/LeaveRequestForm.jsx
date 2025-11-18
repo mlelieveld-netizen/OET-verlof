@@ -215,7 +215,7 @@ const LeaveRequestForm = ({ onSuccess }) => {
 
   const leaveTypes = [
     { id: 'adv', name: 'ADV-dagen', icon: '📅', available: '18 uur beschikbaar', color: 'bg-orange-100' },
-    { id: 'verlof', name: 'Verlof', icon: '🏖️', available: 'Onbeperkt', color: 'bg-blue-100' },
+    { id: 'verlof', name: 'Verlof', icon: '🏖️', available: 'Onbeperkt', color: 'bg-oet-blue-light' },
     { id: 'ziekte', name: 'Ziekte', icon: '🏥', available: '', color: 'bg-red-100' },
     { id: 'persoonlijk', name: 'Persoonlijk', icon: '👤', available: '', color: 'bg-purple-100' },
   ];
@@ -310,7 +310,7 @@ const LeaveRequestForm = ({ onSuccess }) => {
               <button
                 type="button"
                 onClick={startBarcodeScan}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 text-oet-blue hover:bg-oet-blue-light rounded-lg"
                 title={isScanning ? "Stop scannen" : "Streepjescode scannen"}
               >
                 {isScanning ? (
@@ -326,8 +326,8 @@ const LeaveRequestForm = ({ onSuccess }) => {
               </button>
             </div>
             {formData.employeeName && (
-              <div className="flex items-center gap-3 px-4 py-2 bg-blue-50 rounded-lg">
-                <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold">
+              <div className="flex items-center gap-3 px-4 py-2 bg-oet-blue-light rounded-lg">
+                <div className="w-10 h-10 rounded-full bg-oet-blue flex items-center justify-center text-white font-semibold">
                   {formData.employeeName.charAt(0)}
                 </div>
                 <span className="text-gray-800 font-medium">{formData.employeeName}</span>
@@ -341,7 +341,7 @@ const LeaveRequestForm = ({ onSuccess }) => {
           {/* Barcode Scanner */}
           {isScanning && (
             <div className="mt-4">
-              <div id="barcode-scanner" className="w-full h-64 rounded-lg overflow-hidden border-2 border-blue-500 bg-black"></div>
+              <div id="barcode-scanner" className="w-full h-64 rounded-lg overflow-hidden border-2 border-oet-blue bg-black"></div>
               <p className="text-sm text-gray-600 text-center mt-2">Richt de camera op de streepjescode</p>
               <button
                 type="button"
@@ -426,7 +426,7 @@ const LeaveRequestForm = ({ onSuccess }) => {
               onClick={() => setFormData(prev => ({ ...prev, duration: 'uur' }))}
               className={`flex-1 py-3 text-center font-medium transition-colors ${
                 formData.duration === 'uur'
-                  ? 'text-blue-600 border-b-2 border-blue-600'
+                  ? 'text-oet-blue border-b-2 border-oet-blue'
                   : 'text-gray-600'
               }`}
             >
@@ -437,7 +437,7 @@ const LeaveRequestForm = ({ onSuccess }) => {
               onClick={() => setFormData(prev => ({ ...prev, duration: 'dag' }))}
               className={`flex-1 py-3 text-center font-medium transition-colors ${
                 formData.duration === 'dag'
-                  ? 'text-blue-600 border-b-2 border-blue-600'
+                  ? 'text-oet-blue border-b-2 border-oet-blue'
                   : 'text-gray-600'
               }`}
             >
@@ -448,7 +448,7 @@ const LeaveRequestForm = ({ onSuccess }) => {
               onClick={() => setFormData(prev => ({ ...prev, duration: 'meerdere' }))}
               className={`flex-1 py-3 text-center font-medium transition-colors ${
                 formData.duration === 'meerdere'
-                  ? 'text-blue-600 border-b-2 border-blue-600'
+                  ? 'text-oet-blue border-b-2 border-oet-blue'
                   : 'text-gray-600'
               }`}
             >
@@ -536,10 +536,10 @@ const LeaveRequestForm = ({ onSuccess }) => {
                 </div>
               </div>
               {formData.startTime && formData.endTime && calculateHours() > 0 && (
-                <div className="mt-3 px-4 py-2 bg-blue-50 rounded-lg">
+                <div className="mt-3 px-4 py-2 bg-oet-blue-light rounded-lg">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-gray-700">Totaal aantal uren:</span>
-                    <span className="text-lg font-bold text-blue-600">{calculateHours()} uur</span>
+                    <span className="text-lg font-bold text-oet-blue">{calculateHours()} uur</span>
                   </div>
                 </div>
               )}
@@ -583,7 +583,7 @@ const LeaveRequestForm = ({ onSuccess }) => {
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 max-w-md mx-auto">
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-4 px-6 rounded-lg font-semibold text-lg shadow-md active:bg-blue-700"
+            className="w-full bg-oet-blue text-white py-4 px-6 rounded-lg font-semibold text-lg shadow-md active:bg-oet-blue-dark"
           >
             Aanvragen
           </button>
