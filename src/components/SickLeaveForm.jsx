@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { saveLeaveRequest, getLeaveRequests } from '../utils/storage';
+import { saveLeaveRequest } from '../utils/storage';
 import { getEmployeeByNumber, searchEmployees, getEmployeeEmail } from '../data/employees';
 import { generateAdminLink, sendAdminNotificationEmail } from '../utils/email';
 import { createLeaveRequestIssue } from '../utils/github';
+
+const STORAGE_KEY = 'verlof-aanvragen';
 
 const SickLeaveForm = ({ onSuccess }) => {
   const [formData, setFormData] = useState({
@@ -161,11 +163,11 @@ const SickLeaveForm = ({ onSuccess }) => {
         try {
           const issue = await createLeaveRequestIssue(savedRequest, adminLink);
           if (issue) {
-            const requests = getLeaveRequests();
+            const requests = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
             const index = requests.findIndex(r => r.id === savedRequest.id);
             if (index !== -1) {
               requests[index].githubIssueNumber = issue.number;
-              localStorage.setItem('verlof-aanvragen', JSON.stringify(requests));
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(requests));
             }
             alert(`Ziekmelding opgeslagen!\n\nGitHub Issue #${issue.number} is aangemaakt.\nBeheerder link: ${adminLink}`);
           } else {
