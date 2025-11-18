@@ -10,7 +10,7 @@ export const saveLeaveRequest = (request) => {
   const newRequest = {
     ...request,
     id: Date.now().toString(),
-    status: 'pending',
+    status: request.status || 'pending', // Use provided status or default to 'pending'
     createdAt: new Date().toISOString(),
     // Generate unique token for admin link
     adminToken: generateAdminToken(),

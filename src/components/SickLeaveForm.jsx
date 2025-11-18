@@ -137,7 +137,7 @@ const SickLeaveForm = ({ onSuccess }) => {
       return;
     }
 
-    // Create request data with type 'ziekte'
+    // Create request data with type 'ziekte' and status 'sick'
     const requestData = {
       ...formData,
       type: 'ziekte',
@@ -145,6 +145,7 @@ const SickLeaveForm = ({ onSuccess }) => {
       startTime: '',
       endTime: '',
       reason: formData.reason || 'Ziek gemeld',
+      status: 'sick', // Special status for sick leave - no approval needed
     };
     
     const savedRequest = saveLeaveRequest(requestData);

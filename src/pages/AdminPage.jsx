@@ -11,9 +11,10 @@ const AdminPage = ({ token }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actionTaken, setActionTaken] = useState(false);
-  const [activeTab, setActiveTab] = useState('review'); // 'review', 'overview', or 'rejected'
+  const [activeTab, setActiveTab] = useState('review'); // 'review', 'overview', 'rejected', or 'sick'
   const [approvedRequests, setApprovedRequests] = useState([]);
   const [rejectedRequests, setRejectedRequests] = useState([]);
+  const [sickRequests, setSickRequests] = useState([]);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
 
@@ -47,9 +48,29 @@ const AdminPage = ({ token }) => {
   const loadRejectedRequests = () => {
     const allRequests = getLeaveRequests();
     const rejected = allRequests
-      .filter(r => r.status === 'rejected')
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      .filter(r => r && r.status === 'rejected')
+      .sort((a, b) => {
+        try {
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        } catch {
+          return 0;
+        }
+      });
     setRejectedRequests(rejected);
+  };
+
+  const loadSickRequests = () => {
+    const allRequests = getLeaveRequests();
+    const sick = allRequests
+      .filter(r => r && r.status === 'sick')
+      .sort((a, b) => {
+        try {
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        } catch {
+          return 0;
+        }
+      });
+    setSickRequests(sick);
   };
 
   useEffect(() => {
@@ -86,9 +107,10 @@ const AdminPage = ({ token }) => {
       setRequest(leaveRequest);
       setLoading(false);
       
-      // Load approved and rejected requests for overview tabs
+      // Load approved, rejected, and sick requests for overview tabs
       loadApprovedRequests();
       loadRejectedRequests();
+      loadSickRequests();
     } catch (error) {
       console.error('AdminPage: Error loading request:', error);
       setError(`Fout bij het laden: ${error.message}`);
@@ -96,11 +118,12 @@ const AdminPage = ({ token }) => {
     }
   }, [token]);
 
-  // Auto-refresh approved and rejected requests every 5 seconds
+  // Auto-refresh approved, rejected, and sick requests every 5 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       loadApprovedRequests();
       loadRejectedRequests();
+      loadSickRequests();
     }, 5000);
 
     return () => clearInterval(interval);
@@ -197,7 +220,7 @@ const AdminPage = ({ token }) => {
   const getTypeText = (type) => {
     const types = {
       verlof: 'Verlof/Vakantie',
-      ziekte: 'Dokter/Tandarts',
+      ziekte: 'ZIEK',
       persoonlijk: 'Bijzonder verlof',
     };
     return types[type] || type;
@@ -322,6 +345,16 @@ const AdminPage = ({ token }) => {
           >
             Overzicht Afgekeurd ({rejectedRequests.length})
           </button>
+          <button
+            onClick={() => setActiveTab('sick')}
+            className={`px-6 py-3 font-medium transition-colors ${
+              activeTab === 'sick'
+                ? 'border-b-2 border-red-600 text-red-600'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            ZIEK ({sickRequests.length})
+          </button>
         </div>
       </div>
 
@@ -342,10 +375,21 @@ const AdminPage = ({ token }) => {
             getTypeText={getTypeText}
             calculateDays={calculateDays}
             getEmployeeEmail={getEmployeeEmail}
+            handleRejectClick={handleRejectClick}
+            handleApproveFromOverview={handleApproveFromOverview}
           />
-        ) : (
+        ) : activeTab === 'rejected' ? (
           <RejectedOverviewTab 
             rejectedRequests={rejectedRequests}
+            getTypeText={getTypeText}
+            calculateDays={calculateDays}
+            getEmployeeEmail={getEmployeeEmail}
+            handleRejectClick={handleRejectClick}
+            handleApproveFromOverview={handleApproveFromOverview}
+          />
+        ) : (
+          <SickOverviewTab 
+            sickRequests={sickRequests}
             getTypeText={getTypeText}
             calculateDays={calculateDays}
             getEmployeeEmail={getEmployeeEmail}
@@ -404,6 +448,23 @@ const ReviewTab = ({ request, employeeEmail, handleApprove, handleRejectClick, g
 
   // If request is no longer pending, show message
   if (request.status !== 'pending') {
+    if (request.status === 'sick') {
+      return (
+        <div className="bg-white rounded-lg shadow-md p-6 text-center py-12">
+          <div className="mb-4">
+            <div className="inline-block px-4 py-2 rounded-full text-sm font-medium mb-4 bg-red-100 text-red-800 font-bold">
+              ZIEK
+            </div>
+          </div>
+          <p className="text-gray-600 mb-2">
+            Dit is een ziekmelding.
+          </p>
+          <p className="text-sm text-gray-500">
+            Bekijk deze melding in het tabblad "ZIEK".
+          </p>
+        </div>
+      );
+    }
     return (
       <div className="bg-white rounded-lg shadow-md p-6 text-center py-12">
         <div className="mb-4">
@@ -670,6 +731,68 @@ const RejectedOverviewTab = ({ rejectedRequests, getTypeText, calculateDays, get
                   )}
                   <p className="text-xs text-gray-500 mt-2">
                     Afgewezen op: {format(parseISO(req.createdAt), 'd MMMM yyyy HH:mm', { locale: nl })}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+// Sick Overview Tab Component
+const SickOverviewTab = ({ sickRequests, getTypeText, calculateDays, getEmployeeEmail }) => {
+  if (sickRequests.length === 0) {
+    return (
+      <div className="bg-white rounded-lg shadow-md p-6 text-center py-12">
+        <p className="text-gray-500 text-lg">Geen ziekmeldingen gevonden.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {sickRequests.map((req) => {
+        if (!req) return null;
+        const empEmail = req.employeeNumber ? getEmployeeEmail(req.employeeNumber) : null;
+        return (
+          <div key={req.id} className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-start gap-4 mb-4">
+              <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-700 text-xl font-bold">
+                {req.employeeName.charAt(0)}
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-2">
+                  <h3 className="text-xl font-bold text-gray-800">{req.employeeName}</h3>
+                  <span className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium font-bold">
+                    ZIEK
+                  </span>
+                </div>
+                {empEmail && (
+                  <p className="text-sm text-gray-600 mb-3">{empEmail}</p>
+                )}
+                
+                <div className="text-sm text-gray-600 space-y-1">
+                  <p>
+                    <span className="font-medium">Periode:</span>{' '}
+                    {format(parseISO(req.startDate), 'd MMMM yyyy', { locale: nl })}
+                    {req.endDate !== req.startDate && 
+                      ' - ' + format(parseISO(req.endDate), 'd MMMM yyyy', { locale: nl })
+                    }
+                  </p>
+                  <p>
+                    <span className="font-medium">Aantal dagen:</span>{' '}
+                    {calculateDays(req.startDate, req.endDate)} dag(en)
+                  </p>
+                  {req.reason && (
+                    <p className="mt-2 text-gray-700">
+                      <span className="font-medium">Opmerking:</span> {req.reason}
+                    </p>
+                  )}
+                  <p className="text-xs text-gray-500 mt-2">
+                    Gemeld op: {format(parseISO(req.createdAt), 'd MMMM yyyy HH:mm', { locale: nl })}
                   </p>
                 </div>
               </div>

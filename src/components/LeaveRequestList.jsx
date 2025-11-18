@@ -85,6 +85,8 @@ const LeaveRequestList = ({ refreshTrigger }) => {
         return 'Goedgekeurd';
       case 'rejected':
         return 'Afgewezen';
+      case 'sick':
+        return 'Ziek gemeld';
       default:
         return 'In behandeling';
     }
@@ -93,7 +95,7 @@ const LeaveRequestList = ({ refreshTrigger }) => {
   const getTypeText = (type) => {
     const types = {
       verlof: 'Verlof/Vakantie',
-      ziekte: 'Dokter/Tandarts',
+      ziekte: 'ZIEK',
       persoonlijk: 'Bijzonder verlof',
       vakantie: 'Vakantie',
       ander: 'Ander',
@@ -164,10 +166,16 @@ const LeaveRequestList = ({ refreshTrigger }) => {
                     <h3 className="text-lg font-semibold text-gray-800">
                       {request.employeeName}
                     </h3>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(request.status)}`}>
-                      {getStatusText(request.status)}
-                    </span>
-                    <span className="px-3 py-1 bg-oet-blue-light text-oet-blue-dark rounded-full text-xs font-medium">
+                    {request.status !== 'sick' && (
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(request.status)}`}>
+                        {getStatusText(request.status)}
+                      </span>
+                    )}
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      request.type === 'ziekte' 
+                        ? 'bg-red-100 text-red-800 font-bold' 
+                        : 'bg-oet-blue-light text-oet-blue-dark'
+                    }`}>
                       {getTypeText(request.type)}
                     </span>
                   </div>
