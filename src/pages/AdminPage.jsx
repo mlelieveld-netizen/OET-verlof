@@ -173,9 +173,9 @@ const AdminPage = ({ token }) => {
         <div className="bg-white rounded-lg shadow-md p-6 max-w-md w-full">
           <div className="text-red-600 text-5xl mb-4 text-center">⚠️</div>
           <h1 className="text-2xl font-bold text-gray-800 mb-2 text-center">Fout</h1>
-          <div className="text-gray-600 mb-4">
+          <div className="text-gray-600 mb-4 text-center">
             {error ? (
-              <div className="whitespace-pre-line">{error}</div>
+              <p>{error}</p>
             ) : (
               <p>Verlofaanvraag niet gevonden</p>
             )}
