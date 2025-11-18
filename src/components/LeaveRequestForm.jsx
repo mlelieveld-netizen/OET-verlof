@@ -8,7 +8,7 @@ const LeaveRequestForm = ({ onSuccess }) => {
     endDate: '',
     startTime: '',
     endTime: '',
-    type: 'adv',
+    type: 'verlof',
     duration: 'dag',
     employeeNumber: '',
     employeeName: '',
@@ -185,7 +185,7 @@ const LeaveRequestForm = ({ onSuccess }) => {
       endDate: '',
       startTime: '',
       endTime: '',
-      type: 'adv',
+      type: 'verlof',
       duration: 'dag',
       employeeNumber: '',
       employeeName: '',
@@ -214,10 +214,9 @@ const LeaveRequestForm = ({ onSuccess }) => {
   };
 
   const leaveTypes = [
-    { id: 'adv', name: 'ADV-dagen', icon: '📅', available: '18 uur beschikbaar', color: 'bg-orange-100' },
-    { id: 'verlof', name: 'Verlof', icon: '🏖️', available: 'Onbeperkt', color: 'bg-oet-blue-light' },
-    { id: 'ziekte', name: 'Ziekte', icon: '🏥', available: '', color: 'bg-red-100' },
-    { id: 'persoonlijk', name: 'Persoonlijk', icon: '👤', available: '', color: 'bg-purple-100' },
+    { id: 'verlof', name: 'Verlof/Vakantie', icon: '🏖️', available: 'Onbeperkt', color: 'bg-oet-blue-light' },
+    { id: 'ziekte', name: 'Dokter/Tandarts', icon: '🏥', available: '', color: 'bg-red-100' },
+    { id: 'persoonlijk', name: 'Bijzonder verlof', icon: '👤', available: 'Reden opgeven', color: 'bg-purple-100' },
   ];
 
   // Lookup employee by number

@@ -52,9 +52,9 @@ const LeaveRequestList = ({ refreshTrigger }) => {
 
   const getTypeText = (type) => {
     const types = {
-      verlof: 'Verlof',
-      ziekte: 'Ziekte',
-      persoonlijk: 'Persoonlijk',
+      verlof: 'Verlof/Vakantie',
+      ziekte: 'Dokter/Tandarts',
+      persoonlijk: 'Bijzonder verlof',
       vakantie: 'Vakantie',
       ander: 'Ander',
     };
