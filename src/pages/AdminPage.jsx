@@ -430,7 +430,35 @@ const AdminPage = ({ token }) => {
     );
   }
 
-  const calculateDays = (startDate, endDate) => {
+  const calculateHours = (startTime, endTime) => {
+    if (!startTime || !endTime) return null;
+    
+    // Parse time strings (format: "HH:MM")
+    const [startHours, startMinutes] = startTime.split(':').map(Number);
+    const [endHours, endMinutes] = endTime.split(':').map(Number);
+    
+    const startTotalMinutes = startHours * 60 + startMinutes;
+    const endTotalMinutes = endHours * 60 + endMinutes;
+    
+    const diffMinutes = endTotalMinutes - startTotalMinutes;
+    const hours = Math.floor(diffMinutes / 60);
+    const minutes = diffMinutes % 60;
+    
+    if (hours === 0) {
+      return `${minutes} minuten`;
+    } else if (minutes === 0) {
+      return `${hours} ${hours === 1 ? 'uur' : 'uren'}`;
+    } else {
+      return `${hours} ${hours === 1 ? 'uur' : 'uren'} ${minutes} minuten`;
+    }
+  };
+
+  const calculateDays = (startDate, endDate, startTime = null, endTime = null) => {
+    // If times are provided and it's the same day, calculate hours instead
+    if (startTime && endTime && startDate === endDate) {
+      return { type: 'hours', value: calculateHours(startTime, endTime) };
+    }
+    
     const start = parseISO(startDate);
     const end = parseISO(endDate);
     let days = 0;
@@ -460,7 +488,7 @@ const AdminPage = ({ token }) => {
       currentDate.setDate(currentDate.getDate() + 1);
     }
     
-    return days;
+    return { type: 'days', value: days };
   };
 
   const employeeEmail = request ? getEmployeeEmail(request.employeeNumber) : null;
@@ -660,8 +688,20 @@ const ReviewTab = ({ request, pendingRequests, employeeEmail, handleApprove, han
                       }
                     </p>
                     <p>
-                      <span className="font-medium">Aantal dagen:</span>{' '}
-                      {calculateDays(req.startDate, req.endDate)} dag(en)
+                      <span className="font-medium">
+                        {(() => {
+                          const result = calculateDays(req.startDate, req.endDate, req.startTime, req.endTime);
+                          return result.type === 'hours' ? 'Aantal uren:' : 'Aantal dagen:';
+                        })()}
+                      </span>{' '}
+                      {(() => {
+                        const result = calculateDays(req.startDate, req.endDate, req.startTime, req.endTime);
+                        if (result.type === 'hours') {
+                          return result.value;
+                        } else {
+                          return `${result.value} dag(en)`;
+                        }
+                      })()}
                     </p>
                     {req.reason && (
                       <p className="mt-2 text-gray-700">
@@ -768,8 +808,22 @@ const ReviewTab = ({ request, pendingRequests, employeeEmail, handleApprove, han
                 </div>
 
                 <div>
-                  <span className="text-sm font-medium text-gray-600">Aantal dagen:</span>
-                  <p className="text-gray-800">{calculateDays(request.startDate, request.endDate)} dag(en)</p>
+                  <span className="text-sm font-medium text-gray-600">
+                    {(() => {
+                      const result = calculateDays(request.startDate, request.endDate, request.startTime, request.endTime);
+                      return result.type === 'hours' ? 'Aantal uren:' : 'Aantal dagen:';
+                    })()}
+                  </span>
+                  <p className="text-gray-800">
+                    {(() => {
+                      const result = calculateDays(request.startDate, request.endDate, request.startTime, request.endTime);
+                      if (result.type === 'hours') {
+                        return result.value;
+                      } else {
+                        return `${result.value} dag(en)`;
+                      }
+                    })()}
+                  </p>
                 </div>
 
                 {request.startTime && request.endTime && (
@@ -878,8 +932,20 @@ const OverviewTab = ({ approvedRequests, getTypeText, calculateDays, getEmployee
                     }
                   </p>
                   <p>
-                    <span className="font-medium">Aantal dagen:</span>{' '}
-                    {calculateDays(req.startDate, req.endDate)} dag(en)
+                    <span className="font-medium">
+                      {(() => {
+                        const result = calculateDays(req.startDate, req.endDate, req.startTime, req.endTime);
+                        return result.type === 'hours' ? 'Aantal uren:' : 'Aantal dagen:';
+                      })()}
+                    </span>{' '}
+                    {(() => {
+                      const result = calculateDays(req.startDate, req.endDate, req.startTime, req.endTime);
+                      if (result.type === 'hours') {
+                        return result.value;
+                      } else {
+                        return `${result.value} dag(en)`;
+                      }
+                    })()}
                   </p>
                   {req.startTime && req.endTime && (
                     <p>
@@ -959,8 +1025,20 @@ const RejectedOverviewTab = ({ rejectedRequests, getTypeText, calculateDays, get
                     }
                   </p>
                   <p>
-                    <span className="font-medium">Aantal dagen:</span>{' '}
-                    {calculateDays(req.startDate, req.endDate)} dag(en)
+                    <span className="font-medium">
+                      {(() => {
+                        const result = calculateDays(req.startDate, req.endDate, req.startTime, req.endTime);
+                        return result.type === 'hours' ? 'Aantal uren:' : 'Aantal dagen:';
+                      })()}
+                    </span>{' '}
+                    {(() => {
+                      const result = calculateDays(req.startDate, req.endDate, req.startTime, req.endTime);
+                      if (result.type === 'hours') {
+                        return result.value;
+                      } else {
+                        return `${result.value} dag(en)`;
+                      }
+                    })()}
                   </p>
                   {req.startTime && req.endTime && (
                     <p>
@@ -1052,8 +1130,20 @@ const SickOverviewTab = ({ sickRequests, getTypeText, calculateDays, getEmployee
                     }
                   </p>
                   <p>
-                    <span className="font-medium">Aantal dagen:</span>{' '}
-                    {calculateDays(req.startDate, req.endDate)} dag(en)
+                    <span className="font-medium">
+                      {(() => {
+                        const result = calculateDays(req.startDate, req.endDate, req.startTime, req.endTime);
+                        return result.type === 'hours' ? 'Aantal uren:' : 'Aantal dagen:';
+                      })()}
+                    </span>{' '}
+                    {(() => {
+                      const result = calculateDays(req.startDate, req.endDate, req.startTime, req.endTime);
+                      if (result.type === 'hours') {
+                        return result.value;
+                      } else {
+                        return `${result.value} dag(en)`;
+                      }
+                    })()}
                   </p>
                   {req.reason && (
                     <p className="mt-2 text-gray-700">
