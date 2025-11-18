@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import LeaveRequestForm from './components/LeaveRequestForm';
 import LeaveRequestList from './components/LeaveRequestList';
 import CalendarView from './components/CalendarView';
@@ -6,6 +6,11 @@ import CalendarView from './components/CalendarView';
 function App() {
   const [activeTab, setActiveTab] = useState('form');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  useEffect(() => {
+    // Test if React is working
+    console.log('App component loaded');
+  }, []);
 
   const handleFormSuccess = () => {
     setRefreshTrigger(prev => prev + 1);
