@@ -9,7 +9,6 @@ import nl from 'date-fns/locale/nl';
 const PendingRequestsPage = () => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedRequest, setSelectedRequest] = useState(null);
 
   useEffect(() => {
     loadPendingRequests();
@@ -55,7 +54,6 @@ const PendingRequestsPage = () => {
     
     // Reload requests
     loadPendingRequests();
-    setSelectedRequest(null);
   };
 
   const handleReject = async (request) => {
@@ -75,7 +73,6 @@ const PendingRequestsPage = () => {
     
     // Reload requests
     loadPendingRequests();
-    setSelectedRequest(null);
   };
 
   const getTypeText = (type) => {
