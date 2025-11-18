@@ -12,10 +12,23 @@ export const saveLeaveRequest = (request) => {
     id: Date.now().toString(),
     status: 'pending',
     createdAt: new Date().toISOString(),
+    // Generate unique token for admin link
+    adminToken: generateAdminToken(),
   };
   requests.push(newRequest);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(requests));
   return newRequest;
+};
+
+// Generate unique token for admin approval link
+const generateAdminToken = () => {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+};
+
+// Get leave request by admin token
+export const getLeaveRequestByToken = (token) => {
+  const requests = getLeaveRequests();
+  return requests.find(r => r.adminToken === token) || null;
 };
 
 export const updateLeaveRequest = (id, updates) => {

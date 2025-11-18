@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { saveLeaveRequest } from '../utils/storage';
-import { getEmployeeByNumber, getAllEmployees, searchEmployees } from '../data/employees';
+import { getEmployeeByNumber, getAllEmployees, searchEmployees, getEmployeeEmail } from '../data/employees';
+import { generateAdminLink, generateMailtoLink, generateAdminEmailContent } from '../utils/email';
 
 const LeaveRequestForm = ({ onSuccess }) => {
   const [formData, setFormData] = useState({
@@ -262,7 +263,14 @@ const LeaveRequestForm = ({ onSuccess }) => {
       calculatedHours: formData.duration === 'uur' ? calculateHours() : null,
     };
     
-    saveLeaveRequest(requestData);
+    const savedRequest = saveLeaveRequest(requestData);
+    
+    // Generate admin link for email
+    const adminLink = generateAdminLink(savedRequest.adminToken);
+    
+    // Show success message with admin link
+    // Note: In production, this should be sent via a backend service automatically
+    alert(`Verlofaanvraag opgeslagen!\n\nBeheerder link: ${adminLink}\n\nDeze link kan worden gedeeld via email met de beheerder.`);
     
     // Reset form
     setFormData({

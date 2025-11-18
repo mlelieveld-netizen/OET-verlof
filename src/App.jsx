@@ -2,12 +2,21 @@ import { useState, useEffect } from 'react';
 import LeaveRequestForm from './components/LeaveRequestForm';
 import LeaveRequestList from './components/LeaveRequestList';
 import CalendarView from './components/CalendarView';
+import AdminPage from './pages/AdminPage';
 
 function App() {
   const [activeTab, setActiveTab] = useState('form');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [adminToken, setAdminToken] = useState(null);
 
   useEffect(() => {
+    // Check if we're on admin page
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    if (token) {
+      setAdminToken(token);
+    }
+    
     // Test if React is working
     console.log('App component loaded');
   }, []);
@@ -16,6 +25,11 @@ function App() {
     setRefreshTrigger(prev => prev + 1);
     setActiveTab('list');
   };
+
+  // Show admin page if token is present
+  if (adminToken) {
+    return <AdminPage token={adminToken} />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
