@@ -97,9 +97,11 @@ const LeaveRequestForm = ({ onSuccess }) => {
       if (typeDropdownRef.current && !typeDropdownRef.current.contains(event.target)) {
         setShowTypeDropdown(false);
       }
-      if (employeeSuggestionsRef.current && !employeeSuggestionsRef.current.contains(event.target) && 
-          employeeInputRef.current && !employeeInputRef.current.contains(event.target)) {
-        setShowEmployeeSuggestions(false);
+      if (employeeSuggestionsRef.current && employeeInputRef.current) {
+        if (!employeeSuggestionsRef.current.contains(event.target) && 
+            !employeeInputRef.current.contains(event.target)) {
+          setShowEmployeeSuggestions(false);
+        }
       }
     };
 
@@ -202,7 +204,7 @@ const LeaveRequestForm = ({ onSuccess }) => {
   const validate = () => {
     const newErrors = {};
     
-    if (!formData.employeeNumber.trim()) {
+    if (!formData.employeeNumber || !formData.employeeNumber.toString().trim()) {
       newErrors.employeeNumber = 'Personeelsnummer is verplicht';
     }
     if (!formData.startDate) {
