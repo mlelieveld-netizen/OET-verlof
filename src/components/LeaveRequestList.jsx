@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { getLeaveRequests, updateLeaveRequest, deleteLeaveRequest } from '../utils/storage';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import nl from 'date-fns/locale/nl';
+import { generatePendingPageLink } from '../utils/email';
 
 const LeaveRequestList = ({ refreshTrigger }) => {
   const [requests, setRequests] = useState([]);
@@ -71,9 +72,36 @@ const LeaveRequestList = ({ refreshTrigger }) => {
     return differenceInDays(end, start) + 1;
   };
 
+  const pendingPageLink = generatePendingPageLink();
+  const pendingCount = requests.filter(r => r.status === 'pending').length;
+
   return (
     <div className="bg-white">
       <div className="mb-4">
+        {/* Link to separate pending page */}
+        {pendingCount > 0 && (
+          <div className="mb-4 p-4 bg-oet-blue-light rounded-lg border border-oet-blue">
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div>
+                <p className="font-semibold text-oet-blue-dark">
+                  {pendingCount} {pendingCount === 1 ? 'aanvraag' : 'aanvragen'} in behandeling
+                </p>
+                <p className="text-sm text-gray-600 mt-1">
+                  Open de aparte beheerderspagina om alle aanvragen te beoordelen
+                </p>
+              </div>
+              <a
+                href={pendingPageLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 bg-oet-blue text-white rounded-lg font-medium hover:bg-oet-blue-dark transition-colors whitespace-nowrap"
+              >
+                Open Beheerderspagina →
+              </a>
+            </div>
+          </div>
+        )}
+
         <div className="flex gap-2 overflow-x-auto pb-2">
           <button
             onClick={() => setFilter('all')}

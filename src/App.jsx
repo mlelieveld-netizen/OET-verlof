@@ -3,18 +3,26 @@ import LeaveRequestForm from './components/LeaveRequestForm';
 import LeaveRequestList from './components/LeaveRequestList';
 import CalendarView from './components/CalendarView';
 import AdminPage from './pages/AdminPage';
+import PendingRequestsPage from './pages/PendingRequestsPage';
 
 function App() {
   const [activeTab, setActiveTab] = useState('form');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [adminToken, setAdminToken] = useState(null);
+  const [showPendingPage, setShowPendingPage] = useState(false);
 
   useEffect(() => {
-    // Check if we're on admin page
+    // Check if we're on admin page or pending page
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('token');
+    const page = urlParams.get('page');
+    
     if (token) {
       setAdminToken(token);
+    }
+    
+    if (page === 'pending') {
+      setShowPendingPage(true);
     }
     
     // Test if React is working
@@ -25,6 +33,11 @@ function App() {
     setRefreshTrigger(prev => prev + 1);
     setActiveTab('list');
   };
+
+  // Show pending requests page if page=pending
+  if (showPendingPage) {
+    return <PendingRequestsPage />;
+  }
 
   // Show admin page if token is present
   if (adminToken) {

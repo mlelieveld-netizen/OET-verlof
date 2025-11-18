@@ -10,6 +10,14 @@ export const generateAdminLink = (adminToken) => {
   return `${cleanBaseUrl}?token=${adminToken}`;
 };
 
+// Generate pending requests page link
+export const generatePendingPageLink = () => {
+  const baseUrl = window.location.origin + window.location.pathname.replace(/\/$/, '');
+  // Remove trailing slash if present
+  const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+  return `${cleanBaseUrl}?page=pending`;
+};
+
 // Generate ICS calendar file content
 export const generateICSFile = (request) => {
   const startDate = new Date(request.startDate);
