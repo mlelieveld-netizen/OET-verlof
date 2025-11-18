@@ -19,19 +19,17 @@ export default defineConfig({
       }
     },
     {
-      name: 'add-routing-script',
-      transformIndexHtml: {
-        enforce: 'pre',
-        transform(html, ctx) {
-          // Remove any existing CSP meta tags first
-          html = html.replace(/<meta[^>]*http-equiv=["']Content-Security-Policy["'][^>]*>/gi, '');
-          
-          // Add CSP meta tag BEFORE viewport meta tag
-          const cspMeta = `<meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://api.emailjs.com https://*.emailjs.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.emailjs.com https://*.emailjs.com; frame-src 'self' https://api.emailjs.com;" />\n    `;
-          html = html.replace('<meta name="viewport"', cspMeta + '<meta name="viewport"');
-          
-          // Add routing script to built index.html
-          const routingScript = `
+      name: 'add-csp-and-scripts',
+      transformIndexHtml(html) {
+        // Remove any existing CSP meta tags first
+        html = html.replace(/<meta[^>]*http-equiv=["']Content-Security-Policy["'][^>]*>/gi, '');
+        
+        // Add CSP meta tag right after charset, before viewport
+        const cspMeta = `    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://api.emailjs.com https://*.emailjs.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.emailjs.com https://*.emailjs.com; frame-src 'self' https://api.emailjs.com;" />\n`;
+        html = html.replace(/(<meta charset="[^"]*" \/>)/, '$1\n' + cspMeta);
+        
+        // Add routing script to built index.html
+        const routingScript = `
     <script>
       // Single Page Apps for GitHub Pages
       (function(l) {
@@ -45,9 +43,9 @@ export default defineConfig({
         }
       }(window.location))
     </script>`
-          
-          // Add error handling script
-          const errorScript = `
+        
+        // Add error handling script
+        const errorScript = `
     <script>
       // Loading indicator
       const root = document.getElementById('root');
@@ -99,11 +97,10 @@ export default defineConfig({
         }
       }, 5000);
     </script>`
-          
-          html = html.replace('</head>', routingScript + '\n  </head>')
-          html = html.replace('</body>', errorScript + '\n  </body>')
-          return html
-        }
+        
+        html = html.replace('</head>', routingScript + '\n  </head>')
+        html = html.replace('</body>', errorScript + '\n  </body>')
+        return html
       }
     }
   ],
