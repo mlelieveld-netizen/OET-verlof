@@ -72,7 +72,7 @@ function App() {
             )}
             <h1 className="text-xl font-bold text-center">
               {activeTab === 'form' ? 'Verlof aanvragen' : 
-               activeTab === 'sick' ? 'Ziek melden' : 
+               activeTab === 'sick' ? 'Ziekmelden' : 
                activeTab === 'list' ? 'Overzicht' : 'Kalender'}
             </h1>
           </div>
