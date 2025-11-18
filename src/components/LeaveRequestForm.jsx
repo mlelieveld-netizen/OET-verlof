@@ -289,7 +289,8 @@ const LeaveRequestForm = ({ onSuccess }) => {
             }
             alert(`Verlofaanvraag opgeslagen!\n\nGitHub Issue #${issue.number} is aangemaakt.\nBeheerder link: ${adminLink}`);
           } else {
-            alert(`Verlofaanvraag opgeslagen!\n\nBeheerder link: ${adminLink}\n\nLet op: Email kon niet worden verzonden. Deel de link handmatig met de beheerder.`);
+            const errorDetails = emailResult.error || 'Onbekende fout';
+            alert(`Verlofaanvraag opgeslagen!\n\nBeheerder link: ${adminLink}\n\n⚠️ Email kon niet worden verzonden.\n\nFout: ${errorDetails}\n\nOpen de browser console (F12) voor meer details.\n\nDeel de link handmatig met de beheerder.`);
           }
         } catch (error) {
           console.error('Error creating GitHub issue:', error);

@@ -9,6 +9,20 @@ const EMAILJS_TEMPLATE_ID_ADMIN = import.meta.env.VITE_EMAILJS_TEMPLATE_ID_ADMIN
 const EMAILJS_TEMPLATE_ID_APPROVAL = import.meta.env.VITE_EMAILJS_TEMPLATE_ID_APPROVAL || '';
 const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY || '';
 
+// Debug: Log config status (only in development or if explicitly enabled)
+if (typeof window !== 'undefined') {
+  const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  if (isDev || window.location.search.includes('debug=emailjs')) {
+    console.log('📧 EmailJS Config Status:', {
+      SERVICE_ID: EMAILJS_SERVICE_ID ? '✅ Set' : '❌ Missing',
+      PUBLIC_KEY: EMAILJS_PUBLIC_KEY ? '✅ Set' : '❌ Missing',
+      TEMPLATE_ADMIN: EMAILJS_TEMPLATE_ID_ADMIN ? '✅ Set' : '❌ Missing',
+      TEMPLATE_APPROVAL: EMAILJS_TEMPLATE_ID_APPROVAL ? '✅ Set' : '❌ Missing',
+      allEnvVars: Object.keys(import.meta.env).filter(k => k.startsWith('VITE_EMAILJS'))
+    });
+  }
+}
+
 // Initialize EmailJS
 if (EMAILJS_PUBLIC_KEY) {
   emailjs.init(EMAILJS_PUBLIC_KEY);
@@ -184,8 +198,10 @@ export const sendEmail = async (templateId, templateParams) => {
     const missing = [];
     if (!EMAILJS_SERVICE_ID) missing.push('VITE_EMAILJS_SERVICE_ID');
     if (!EMAILJS_PUBLIC_KEY) missing.push('VITE_EMAILJS_PUBLIC_KEY');
+    const errorMsg = `EmailJS niet geconfigureerd. Ontbrekend: ${missing.join(', ')}. Voor GitHub Pages: voeg secrets toe in Settings → Secrets and variables → Actions en draai de deployment opnieuw.`;
     console.warn('EmailJS not configured. Missing:', missing);
-    return { success: false, error: `EmailJS not configured. Missing: ${missing.join(', ')}` };
+    console.warn('Available env vars:', Object.keys(import.meta.env).filter(k => k.startsWith('VITE_')));
+    return { success: false, error: errorMsg };
   }
 
   if (!templateId) {
