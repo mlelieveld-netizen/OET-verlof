@@ -36,12 +36,22 @@ export default defineConfig({
       window.addEventListener('error', function(e) {
         console.error('Global error:', e.error, e.filename, e.lineno, e.colno);
         const root = document.getElementById('root');
-        if (root && !root.innerHTML.includes('Error')) {
+        if (root && !root.innerHTML.includes('Error') && !root.innerHTML.includes('Laden...')) {
           let errorMsg = e.error ? e.error.message : e.message;
-          if (e.filename && e.filename.includes('main.jsx')) {
-            errorMsg = '404 Error: main.jsx not found. This usually means the page is cached. Try: Ctrl+Shift+R (hard refresh) or open in incognito mode.';
+          let fileName = e.filename || e.target?.src || 'unknown';
+          
+          // Check if it's a 404 for a resource
+          if (e.target && e.target.tagName) {
+            if (e.target.tagName === 'SCRIPT' || e.target.tagName === 'LINK') {
+              errorMsg = '404 Error: Resource not found: ' + fileName;
+              errorMsg += '\\n\\nThis usually means:\\n1. The page is cached (try Ctrl+Shift+R)\\n2. GitHub Pages build is not ready yet\\n3. Open in incognito mode to bypass cache';
+            }
+          } else if (fileName.includes('main.jsx') || fileName.includes('.js')) {
+            errorMsg = '404 Error: JavaScript file not found: ' + fileName;
+            errorMsg += '\\n\\nThis usually means the page is cached. Try:\\n1. Ctrl+Shift+R (hard refresh)\\n2. Open in incognito mode\\n3. Wait for GitHub Actions build to complete';
           }
-          root.innerHTML = '<div style="padding: 20px; color: red; max-width: 600px; margin: 0 auto;"><h2 style="color: red;">Error loading app</h2><p>Please check the browser console (F12) for details.</p><p style="font-size: 12px; margin-top: 10px;">Error: ' + errorMsg + '</p><p style="font-size: 12px; margin-top: 10px; color: #666;">File: ' + (e.filename || 'unknown') + '</p><button onclick="window.location.reload(true)" style="margin-top: 10px; padding: 10px 20px; background: #2C3E50; color: white; border: none; border-radius: 5px; cursor: pointer;">Hard Refresh</button></div>';
+          
+          root.innerHTML = '<div style="padding: 20px; color: red; max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;"><h2 style="color: red; margin-bottom: 15px;">Error loading app</h2><p style="margin-bottom: 10px;">Please check the browser console (F12) for details.</p><p style="font-size: 12px; margin-top: 10px; white-space: pre-line; background: #fff3cd; padding: 10px; border-radius: 5px; border-left: 4px solid #ffc107;">Error: ' + errorMsg + '</p><p style="font-size: 12px; margin-top: 10px; color: #666;">File: ' + fileName + '</p><div style="margin-top: 15px; display: flex; gap: 10px;"><button onclick="window.location.reload(true)" style="flex: 1; padding: 10px 20px; background: #2C3E50; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Hard Refresh</button><button onclick="window.open(window.location.href, \\'_blank\\')" style="flex: 1; padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer;">Open in New Tab</button></div></div>';
         }
       });
       
