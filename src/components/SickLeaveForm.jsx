@@ -150,8 +150,9 @@ const SickLeaveForm = ({ onSuccess }) => {
     
     const savedRequest = saveLeaveRequest(requestData);
     
-    // Generate admin link
-    const adminLink = generateAdminLink(savedRequest.adminToken);
+    // For sick leave, use the overview link instead of a specific token link
+    // This works across browsers/devices since it shows all sick requests
+    const adminLink = 'https://mlelieveld-netizen.github.io/OET-verlof/?admin=true';
     
     // Send email notification to admin
     try {

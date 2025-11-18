@@ -132,6 +132,17 @@ const AdminPage = ({ token }) => {
       const leaveRequest = getLeaveRequestByToken(token);
       if (!leaveRequest) {
         console.error('AdminPage: Request not found for token:', token);
+        // If request not found, check if there are any sick requests
+        // If so, redirect to overview page with ZIEK tab
+        const allRequests = getLeaveRequests();
+        const hasSickRequests = allRequests.some(r => r && r.status === 'sick');
+        
+        if (hasSickRequests) {
+          // Redirect to overview page with ZIEK tab active
+          window.location.href = 'https://mlelieveld-netizen.github.io/OET-verlof/?admin=true';
+          return;
+        }
+        
         setError('Verlofaanvraag niet gevonden. Mogelijke oorzaken: De aanvraag is verwijderd, je gebruikt een andere browser/device, of de link is verlopen.');
         setLoading(false);
         return;
