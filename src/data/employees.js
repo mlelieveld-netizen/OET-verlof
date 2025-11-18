@@ -15,7 +15,7 @@ export const employees = {
   '123047': 'Dylan Lelieveld',
   '123048': 'Henri Wittebol',
   '123052': 'Robert Basters',
-  '123054': 'Willem vari der Sanden',
+  '123054': 'Willem van der Sanden',
   '123076': 'Mark Danyl',
   '123078': 'Marco Nabuurs',
   '123079': 'Lars van der Eridan',
