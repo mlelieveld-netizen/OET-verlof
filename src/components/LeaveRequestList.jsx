@@ -6,7 +6,7 @@ import { sendDeletionNotificationEmail } from '../utils/email';
 
 const LeaveRequestList = ({ refreshTrigger }) => {
   const [requests, setRequests] = useState([]);
-  const [filter, setFilter] = useState('all');
+  const [filter, setFilter] = useState('pending'); // Default to 'pending' instead of 'all'
 
   useEffect(() => {
     loadRequests();
@@ -101,9 +101,7 @@ const LeaveRequestList = ({ refreshTrigger }) => {
     return types[type] || type;
   };
 
-  const filteredRequests = filter === 'all' 
-    ? requests 
-    : requests.filter(r => r.status === filter);
+  const filteredRequests = requests.filter(r => r.status === filter);
 
   const calculateDays = (startDate, endDate) => {
     const start = parseISO(startDate);
@@ -116,16 +114,6 @@ const LeaveRequestList = ({ refreshTrigger }) => {
       <div className="mb-4">
 
         <div className="flex gap-2 overflow-x-auto pb-2">
-          <button
-            onClick={() => setFilter('all')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
-              filter === 'all'
-                ? 'bg-oet-blue text-white'
-                : 'bg-gray-200 text-gray-700'
-            }`}
-          >
-            Alle
-          </button>
           <button
             onClick={() => setFilter('pending')}
             className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
