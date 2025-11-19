@@ -13,8 +13,17 @@ export default defineConfig({
         // Vite automatically copies public folder contents, but we ensure it's there
         const logoSource = resolve(__dirname, 'public/logo.jpg');
         const logoDest = resolve(__dirname, 'dist/logo.jpg');
+        console.log('Copying logo from:', logoSource);
+        console.log('Logo exists:', existsSync(logoSource));
         if (existsSync(logoSource)) {
-          copyFileSync(logoSource, logoDest);
+          try {
+            copyFileSync(logoSource, logoDest);
+            console.log('Logo copied successfully to:', logoDest);
+          } catch (error) {
+            console.error('Error copying logo:', error);
+          }
+        } else {
+          console.warn('Logo source not found:', logoSource);
         }
       }
     },
