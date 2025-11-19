@@ -180,6 +180,12 @@ export const sendAdminNotificationEmail = async (request, adminLink) => {
   return await sendEmail(EMAILJS_TEMPLATE_ID_ADMIN, templateParams);
 };
 
+// Generate ICS download URL
+export const generateICSDownloadUrl = (adminToken) => {
+  const baseUrl = window.location.origin + (window.location.pathname.includes('/OET-verlof') ? '/OET-verlof' : '');
+  return `${baseUrl}/?ics=${adminToken}`;
+};
+
 // Send approval email with ICS attachment
 export const sendApprovalEmail = async (request, icsContent) => {
   if (!EMAILJS_TEMPLATE_ID_APPROVAL) {
@@ -189,17 +195,18 @@ export const sendApprovalEmail = async (request, icsContent) => {
   // Create ICS file name
   const icsFileName = `verlof-${request.employeeName.replace(/\s+/g, '-')}-${request.startDate}.ics`;
   
-  // Create a data URI for the ICS file - this works in most email clients
-  const base64Content = btoa(unescape(encodeURIComponent(icsContent)));
-  const dataUri = `data:text/calendar;charset=utf-8;base64,${base64Content}`;
+  // Generate public download URL
+  const icsDownloadUrl = generateICSDownloadUrl(request.adminToken);
   
-  // Create a simple, working download link
-  // Using data URI which should work in most modern email clients
+  // Create a simple, working download link to the public URL
   const icsDownloadLink = `<div style="margin: 20px 0;">
-  <a href="${dataUri}" style="display: inline-block; padding: 12px 24px; background-color: #2C3E50; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">📅 Download Agenda Item (.ics bestand)</a>
+  <a href="${icsDownloadUrl}" style="display: inline-block; padding: 12px 24px; background-color: #2C3E50; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">📅 Download Agenda Item (.ics bestand)</a>
 </div>
 <p style="color: #666; font-size: 14px; margin-top: 10px;">
   <strong>Bestandsnaam:</strong> ${icsFileName}
+</p>
+<p style="color: #999; font-size: 12px; margin-top: 5px;">
+  Klik op de knop hierboven om het agenda item te downloaden.
 </p>`;
   
   // Also include the ICS content as formatted text for manual copy/paste
