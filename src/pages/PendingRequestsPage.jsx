@@ -9,6 +9,9 @@ import nl from 'date-fns/locale/nl';
 const PendingRequestsPage = () => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [requestToReject, setRequestToReject] = useState(null);
 
   useEffect(() => {
     loadPendingRequests();
@@ -58,20 +61,38 @@ const PendingRequestsPage = () => {
     loadPendingRequests();
   };
 
-  const handleReject = async (request) => {
-    if (!request) return;
+  const handleRejectClick = (request) => {
+    setRequestToReject(request);
+    setShowRejectModal(true);
+  };
+
+  const handleReject = async () => {
+    if (!requestToReject) return;
     
-    await updateLeaveRequest(request.id, { status: 'rejected' });
+    if (!rejectionReason.trim()) {
+      alert('Geef alstublieft een reden op voor de afwijzing.');
+      return;
+    }
+    
+    await updateLeaveRequest(requestToReject.id, { 
+      status: 'rejected',
+      rejectionReason: rejectionReason.trim()
+    });
     
     // Update GitHub Issue if exists
-    if (request.githubIssueNumber) {
+    if (requestToReject.githubIssueNumber) {
       try {
-        await updateLeaveRequestIssue(request.githubIssueNumber, 'rejected');
-        await addIssueComment(request.githubIssueNumber, '❌ **Afgewezen**\n\nDe verlofaanvraag is afgewezen.');
+        await updateLeaveRequestIssue(requestToReject.githubIssueNumber, 'rejected');
+        await addIssueComment(requestToReject.githubIssueNumber, `❌ **Afgewezen**\n\nReden: ${rejectionReason.trim()}`);
       } catch (error) {
         console.error('Error updating GitHub issue:', error);
       }
     }
+    
+    // Close modal and reset
+    setShowRejectModal(false);
+    setRejectionReason('');
+    setRequestToReject(null);
     
     // Reload requests
     loadPendingRequests();
@@ -211,7 +232,7 @@ const PendingRequestsPage = () => {
                       ✓ Goedkeuren
                     </button>
                     <button
-                      onClick={() => handleReject(request)}
+                      onClick={() => handleRejectClick(request)}
                       className="flex-1 bg-red-600 text-white py-3 px-6 rounded-lg font-semibold shadow-md hover:bg-red-700 transition-colors"
                     >
                       ✗ Afwijzen
@@ -230,6 +251,43 @@ const PendingRequestsPage = () => {
           Last build {new Date().toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' })} By MLelieveld
         </p>
       </footer>
+
+      {/* Rejection Reason Modal */}
+      {showRejectModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-4">Reden voor afwijzing</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Geef een reden op waarom deze verlofaanvraag wordt afgewezen. Deze reden wordt getoond aan de aanvrager.
+            </p>
+            <textarea
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+              placeholder="Bijv. Te veel verlofaanvragen in deze periode, onvoldoende personeel beschikbaar, etc."
+              className="w-full h-32 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none"
+              autoFocus
+            />
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowRejectModal(false);
+                  setRejectionReason('');
+                  setRequestToReject(null);
+                }}
+                className="flex-1 px-4 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors min-h-[44px]"
+              >
+                Annuleren
+              </button>
+              <button
+                onClick={handleReject}
+                className="flex-1 px-4 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors min-h-[44px]"
+              >
+                Afwijzen
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
