@@ -46,11 +46,11 @@ const LeaveRequestList = ({ refreshTrigger }) => {
     // If status is not pending, send notification email to admin
     if (request.status !== 'pending') {
       try {
-        const emailResult = 
-        if (emailResult && emailResult.success) {
-          console.log('Deletion notification email sent to admin');
+        // Removed broken email code 
+        // Removed {
+          // Removed
         } else {
-          console.warn('Email notification failed:', emailResult?.error);
+          // Removed
         }
       } catch (error) {
         console.error('Error sending deletion notification email:', error);
