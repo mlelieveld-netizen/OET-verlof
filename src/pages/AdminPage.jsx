@@ -360,20 +360,8 @@ const AdminPage = ({ token }) => {
     return types[type] || type;
   };
 
-  // Loading state
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block w-12 h-12 border-4 border-oet-blue border-t-transparent rounded-full animate-spin mb-4"></div>
-          <p className="text-gray-600">Laden...</p>
-        </div>
-      </div>
-    );
-  }
-
+  // ALL useEffect hooks must be BEFORE any early returns
   // Auto-redirect to overview if request not found (but not in overview mode)
-  // Always call useEffect, but only execute redirect logic conditionally
   useEffect(() => {
     // Only redirect if conditions are met
     if ((error || (!request && !loading)) && token !== 'overview' && token) {
@@ -388,6 +376,30 @@ const AdminPage = ({ token }) => {
     return () => {};
   }, [error, request, loading, token]);
 
+  // Action taken state (only show if we have a request)
+  // Auto-redirect to admin overview after 5 seconds
+  useEffect(() => {
+    if (actionTaken && request) {
+      const timer = setTimeout(() => {
+        window.location.href = 'https://mlelieveld-netizen.github.io/OET-verlof/?admin=true';
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [actionTaken, request]);
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block w-12 h-12 border-4 border-oet-blue border-t-transparent rounded-full animate-spin mb-4"></div>
+          <p className="text-gray-600">Laden...</p>
+        </div>
+      </div>
+    );
+  }
+
   // Show loading/redirect message if request not found
   if ((error || (!request && !loading)) && token !== 'overview' && token) {
     return (
@@ -400,18 +412,6 @@ const AdminPage = ({ token }) => {
       </div>
     );
   }
-
-  // Action taken state (only show if we have a request)
-  // Auto-redirect to admin overview after 5 seconds
-  useEffect(() => {
-    if (actionTaken && request) {
-      const timer = setTimeout(() => {
-        window.location.href = 'https://mlelieveld-netizen.github.io/OET-verlof/?admin=true';
-      }, 5000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [actionTaken, request]);
 
   if (actionTaken && request) {
     const statusText = request.status === 'approved' ? 'goedgekeurd' : 'afgewezen';
