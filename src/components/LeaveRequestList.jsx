@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getLeaveRequests, updateLeaveRequest, deleteLeaveRequest } from '../utils/storage';
+import { getLeaveRequests } from '../utils/storage';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import nl from 'date-fns/locale/nl';
 import { generatePendingPageLink } from '../utils/email';
@@ -17,17 +17,7 @@ const LeaveRequestList = ({ refreshTrigger }) => {
     setRequests(allRequests.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
   };
 
-  const handleStatusChange = async (id, newStatus) => {
-    await updateLeaveRequest(id, { status: newStatus });
-    loadRequests();
-  };
-
-  const handleDelete = async (id) => {
-    if (window.confirm('Weet u zeker dat u deze aanvraag wilt verwijderen?')) {
-      await deleteLeaveRequest(id);
-      loadRequests();
-    }
-  };
+  // Removed handleStatusChange and handleDelete - these actions are only available on the admin page
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -193,47 +183,8 @@ const LeaveRequestList = ({ refreshTrigger }) => {
                 </div>
               </div>
 
-              {request.status === 'pending' && (
-                <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-gray-200">
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleStatusChange(request.id, 'approved')}
-                      className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg font-medium active:bg-green-700"
-                    >
-                      Goedkeuren
-                    </button>
-                    <button
-                      onClick={() => handleStatusChange(request.id, 'rejected')}
-                      className="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg font-medium active:bg-red-700"
-                    >
-                      Afwijzen
-                    </button>
-                  </div>
-                  <button
-                    onClick={() => handleDelete(request.id)}
-                    className="w-full py-2 bg-gray-200 text-gray-700 rounded-lg font-medium active:bg-gray-300"
-                  >
-                    Verwijderen
-                  </button>
-                </div>
-              )}
-
-              {request.status !== 'pending' && (
-                <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-gray-200">
-                  <button
-                    onClick={() => handleStatusChange(request.id, 'pending')}
-                    className="w-full py-2 bg-gray-200 text-gray-700 rounded-lg font-medium active:bg-gray-300"
-                  >
-                    Terugzetten
-                  </button>
-                  <button
-                    onClick={() => handleDelete(request.id)}
-                    className="w-full py-2 bg-gray-200 text-gray-700 rounded-lg font-medium active:bg-gray-300"
-                  >
-                    Verwijderen
-                  </button>
-                </div>
-              )}
+              {/* No action buttons on overview page - only view */}
+              {/* Actions (approve/reject) are only available on the admin page */}
             </div>
           ))}
         </div>
