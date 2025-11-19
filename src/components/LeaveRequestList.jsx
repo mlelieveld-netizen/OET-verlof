@@ -145,7 +145,7 @@ const LeaveRequestList = ({ refreshTrigger }) => {
         <div className="flex gap-2 overflow-x-auto pb-2">
           <button
             onClick={() => setFilter('pending')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
+            className={`px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-medium transition-colors whitespace-nowrap min-h-[44px] ${
               filter === 'pending'
                 ? 'bg-oet-blue text-white'
                 : 'bg-gray-200 text-gray-700'
@@ -155,7 +155,7 @@ const LeaveRequestList = ({ refreshTrigger }) => {
           </button>
           <button
             onClick={() => setFilter('approved')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
+            className={`px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-medium transition-colors whitespace-nowrap min-h-[44px] ${
               filter === 'approved'
                 ? 'bg-oet-blue text-white'
                 : 'bg-gray-200 text-gray-700'
@@ -165,7 +165,7 @@ const LeaveRequestList = ({ refreshTrigger }) => {
           </button>
           <button
             onClick={() => setFilter('rejected')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
+            className={`px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-medium transition-colors whitespace-nowrap min-h-[44px] ${
               filter === 'rejected'
                 ? 'bg-oet-blue text-white'
                 : 'bg-gray-200 text-gray-700'
@@ -185,7 +185,7 @@ const LeaveRequestList = ({ refreshTrigger }) => {
           {filteredRequests.map((request) => (
             <div
               key={request.id}
-              className="border border-gray-200 rounded-lg p-4 bg-white"
+              className="border border-gray-200 rounded-lg p-3 sm:p-4 bg-white"
             >
               <div className="flex justify-between items-start mb-3">
                 <div className="flex-1">
@@ -241,7 +241,7 @@ const LeaveRequestList = ({ refreshTrigger }) => {
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <button
                   onClick={() => handleDelete(request)}
-                  className="w-full py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+                  className="w-full py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors min-h-[44px]"
                 >
                   {request.status === 'pending' ? 'Intrekken' : 'Verwijderen'}
                 </button>

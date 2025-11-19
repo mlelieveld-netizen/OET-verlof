@@ -30,7 +30,7 @@ const AdminPage = ({ token }) => {
           <p className="text-gray-600 mb-4">Geen token opgegeven</p>
           <button
             onClick={() => window.location.href = 'https://mlelieveld-netizen.github.io/OET-verlof/'}
-            className="w-full bg-oet-blue text-white py-2 px-4 rounded-lg font-medium hover:bg-oet-blue-dark transition-colors"
+            className="w-full bg-oet-blue text-white py-3 px-4 rounded-lg font-medium hover:bg-oet-blue-dark transition-colors min-h-[44px]"
           >
             Terug naar hoofdpagina
           </button>
@@ -503,24 +503,24 @@ const AdminPage = ({ token }) => {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-oet-blue text-white shadow-md">
-        <div className="max-w-4xl mx-auto px-4 py-6">
-          <div className="flex justify-center items-center mb-4">
+        <div className="max-w-4xl mx-auto px-2 sm:px-4 py-3 sm:py-6">
+          <div className="flex justify-center items-center mb-2 sm:mb-4">
             <img 
               src="/OET-verlof/logo.jpg" 
               alt="OET Logo" 
-              className="h-20 w-auto object-contain"
+              className="h-16 sm:h-20 w-auto object-contain"
             />
           </div>
-          <h1 className="text-2xl font-bold text-center">Beheerderspagina</h1>
+          <h1 className="text-lg sm:text-2xl font-bold text-center">Beheerderspagina</h1>
         </div>
       </header>
 
-      {/* Tabs */}
-      <div className="max-w-4xl mx-auto px-4 pt-4">
-        <div className="flex gap-2 border-b border-gray-200">
+      {/* Tabs - Scrollable on mobile */}
+      <div className="max-w-4xl mx-auto px-2 sm:px-4 pt-2 sm:pt-4">
+        <div className="flex gap-1 sm:gap-2 border-b border-gray-200 overflow-x-auto scrollbar-hide -mx-2 sm:mx-0 px-2 sm:px-0">
           <button
             onClick={() => setActiveTab('review')}
-            className={`px-6 py-3 font-medium transition-colors ${
+            className={`px-3 sm:px-6 py-3 font-medium transition-colors whitespace-nowrap min-h-[44px] flex items-center ${
               activeTab === 'review'
                 ? 'border-b-2 border-oet-blue text-oet-blue'
                 : 'text-gray-600 hover:text-gray-800'
@@ -530,27 +530,31 @@ const AdminPage = ({ token }) => {
           </button>
           <button
             onClick={() => setActiveTab('overview')}
-            className={`px-6 py-3 font-medium transition-colors ${
+            className={`px-3 sm:px-6 py-3 font-medium transition-colors whitespace-nowrap min-h-[44px] flex items-center text-sm sm:text-base ${
               activeTab === 'overview'
                 ? 'border-b-2 border-oet-blue text-oet-blue'
                 : 'text-gray-600 hover:text-gray-800'
             }`}
           >
-            Overzicht Goedgekeurd ({approvedRequests.length})
+            <span className="hidden sm:inline">Overzicht Goedgekeurd</span>
+            <span className="sm:hidden">Goedgekeurd</span>
+            <span className="ml-1">({approvedRequests.length})</span>
           </button>
           <button
             onClick={() => setActiveTab('rejected')}
-            className={`px-6 py-3 font-medium transition-colors ${
+            className={`px-3 sm:px-6 py-3 font-medium transition-colors whitespace-nowrap min-h-[44px] flex items-center text-sm sm:text-base ${
               activeTab === 'rejected'
                 ? 'border-b-2 border-oet-blue text-oet-blue'
                 : 'text-gray-600 hover:text-gray-800'
             }`}
           >
-            Overzicht Afgekeurd ({rejectedRequests.length})
+            <span className="hidden sm:inline">Overzicht Afgekeurd</span>
+            <span className="sm:hidden">Afgekeurd</span>
+            <span className="ml-1">({rejectedRequests.length})</span>
           </button>
           <button
             onClick={() => setActiveTab('sick')}
-            className={`px-6 py-3 font-medium transition-colors ${
+            className={`px-3 sm:px-6 py-3 font-medium transition-colors whitespace-nowrap min-h-[44px] flex items-center ${
               activeTab === 'sick'
                 ? 'border-b-2 border-red-600 text-red-600'
                 : 'text-gray-600 hover:text-gray-800'
@@ -562,7 +566,7 @@ const AdminPage = ({ token }) => {
       </div>
 
       {/* Content */}
-      <div className="max-w-4xl mx-auto p-4">
+      <div className="max-w-4xl mx-auto p-2 sm:p-4 pb-6">
         {activeTab === 'review' ? (
           <ReviewTab 
             request={request} 
@@ -625,13 +629,13 @@ const AdminPage = ({ token }) => {
                   setShowRejectModal(false);
                   setRejectionReason('');
                 }}
-                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+                className="flex-1 px-4 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors min-h-[44px]"
               >
                 Annuleren
               </button>
               <button
                 onClick={handleReject}
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
+                className="flex-1 px-4 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors min-h-[44px]"
               >
                 Afwijzen
               </button>
@@ -652,7 +656,7 @@ const ReviewTab = ({ request, pendingRequests, employeeEmail, handleApprove, han
     
     if (filteredPendingRequests.length === 0) {
       return (
-        <div className="bg-white rounded-lg shadow-md p-6 text-center py-12">
+        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 text-center py-8 sm:py-12">
           <p className="text-gray-500 text-lg">Geen openstaande verlofaanvragen gevonden.</p>
         </div>
       );
@@ -666,7 +670,7 @@ const ReviewTab = ({ request, pendingRequests, employeeEmail, handleApprove, han
           const adminLink = `https://mlelieveld-netizen.github.io/OET-verlof/?token=${req.adminToken}`;
           
           return (
-            <div key={req.id} className="bg-white rounded-lg shadow-md p-6">
+            <div key={req.id} className="bg-white rounded-lg shadow-md p-4 sm:p-6">
               <div className="flex items-start gap-4 mb-4">
                 <div className="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-700 text-xl font-bold">
                   {req.employeeName.charAt(0)}
@@ -723,7 +727,7 @@ const ReviewTab = ({ request, pendingRequests, employeeEmail, handleApprove, han
                   <div className="border-t border-gray-200 pt-4 mt-4">
                     <a
                       href={adminLink}
-                      className="w-full block text-center bg-oet-blue text-white py-2 px-4 rounded-lg font-medium hover:bg-oet-blue-dark transition-colors"
+                      className="w-full block text-center bg-oet-blue text-white py-3 px-4 rounded-lg font-medium hover:bg-oet-blue-dark transition-colors min-h-[44px]"
                     >
                       Beoordelen
                     </a>
@@ -768,7 +772,7 @@ const ReviewTab = ({ request, pendingRequests, employeeEmail, handleApprove, han
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
           {/* Employee Info */}
           <div className="mb-6">
             <div className="flex items-center gap-4 mb-4">
@@ -862,13 +866,13 @@ const ReviewTab = ({ request, pendingRequests, employeeEmail, handleApprove, han
               <div className="flex flex-col gap-3">
                 <button
                   onClick={handleApprove}
-                  className="w-full bg-green-600 text-white py-4 px-6 rounded-lg font-semibold text-lg shadow-md hover:bg-green-700 transition-colors"
+                  className="w-full bg-green-600 text-white py-3 sm:py-4 px-4 sm:px-6 rounded-lg font-semibold text-base sm:text-lg shadow-md hover:bg-green-700 transition-colors min-h-[44px]"
                 >
                   Goedkeuren
                 </button>
                 <button
                   onClick={handleRejectClick}
-                  className="w-full bg-red-600 text-white py-4 px-6 rounded-lg font-semibold text-lg shadow-md hover:bg-red-700 transition-colors"
+                  className="w-full bg-red-600 text-white py-3 sm:py-4 px-4 sm:px-6 rounded-lg font-semibold text-base sm:text-lg shadow-md hover:bg-red-700 transition-colors min-h-[44px]"
                 >
                   Afwijzen
                 </button>
@@ -973,7 +977,7 @@ const OverviewTab = ({ approvedRequests, getTypeText, calculateDays, getEmployee
                   {handleRejectClick && (
                     <button
                       onClick={() => handleRejectClick(req.id)}
-                      className="w-full bg-red-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-red-700 transition-colors"
+                      className="w-full bg-red-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-red-700 transition-colors min-h-[44px]"
                     >
                       Alsnog Afwijzen
                     </button>
@@ -1072,7 +1076,7 @@ const RejectedOverviewTab = ({ rejectedRequests, getTypeText, calculateDays, get
                   {handleApproveFromOverview && (
                     <button
                       onClick={() => handleApproveFromOverview(req.id)}
-                      className="w-full bg-green-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-green-700 transition-colors mb-2"
+                      className="w-full bg-green-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-green-700 transition-colors mb-2 min-h-[44px]"
                     >
                       Alsnog Goedkeuren
                     </button>
@@ -1080,7 +1084,7 @@ const RejectedOverviewTab = ({ rejectedRequests, getTypeText, calculateDays, get
                   {handleRejectClick && (
                     <button
                       onClick={() => handleRejectClick(req.id)}
-                      className="w-full bg-red-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-red-700 transition-colors"
+                      className="w-full bg-red-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-red-700 transition-colors min-h-[44px]"
                     >
                       Reden Wijzigen
                     </button>

@@ -389,7 +389,7 @@ const LeaveRequestForm = ({ onSuccess }) => {
 
   return (
     <div className="bg-white min-h-[calc(100vh-120px)] pb-24">
-      <form onSubmit={handleSubmit} className="px-4">
+      <form onSubmit={handleSubmit} className="px-2 sm:px-4">
         {/* Colleague Selection */}
         <div className="pt-4">
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -410,7 +410,7 @@ const LeaveRequestForm = ({ onSuccess }) => {
                 }}
                 placeholder="Naam of personeelsnummer invoeren of scannen"
                 autoFocus={false}
-                className={`w-full bg-white border rounded-lg px-4 py-4 pr-12 text-sm ${
+                className={`w-full bg-white border rounded-lg px-3 sm:px-4 py-3 sm:py-4 pr-10 sm:pr-12 text-sm min-h-[44px] ${
                   errors.employeeNumber ? 'border-red-500' : 'border-gray-200'
                 }`}
               />
@@ -475,7 +475,7 @@ const LeaveRequestForm = ({ onSuccess }) => {
               <button
                 type="button"
                 onClick={startBarcodeScan}
-                className="w-full mt-2 bg-red-600 text-white py-2 px-4 rounded-lg font-medium"
+                className="w-full mt-2 bg-red-600 text-white py-3 px-4 rounded-lg font-medium min-h-[44px]"
               >
                 Stop scannen
               </button>
@@ -649,7 +649,7 @@ const LeaveRequestForm = ({ onSuccess }) => {
                     name="startTime"
                     value={formData.startTime}
                     onChange={handleChange}
-                    className={`w-full bg-white border rounded-lg px-4 py-3 ${
+                    className={`w-full bg-white border rounded-lg px-3 sm:px-4 py-3 min-h-[44px] ${
                       errors.startTime ? 'border-red-500' : 'border-gray-200'
                     }`}
                   />
@@ -667,7 +667,7 @@ const LeaveRequestForm = ({ onSuccess }) => {
                     value={formData.endTime}
                     onChange={handleChange}
                     min={formData.startTime}
-                    className={`w-full bg-white border rounded-lg px-4 py-3 ${
+                    className={`w-full bg-white border rounded-lg px-3 sm:px-4 py-3 min-h-[44px] ${
                       errors.endTime ? 'border-red-500' : 'border-gray-200'
                     }`}
                   />
@@ -752,7 +752,7 @@ const LeaveRequestForm = ({ onSuccess }) => {
         <div className="fixed bottom-16 left-0 right-0 bg-white border-t border-gray-200 p-4 max-w-md mx-auto z-20">
           <button
             type="submit"
-            className="w-full bg-oet-blue text-white py-4 px-6 rounded-lg font-semibold text-lg shadow-md active:bg-oet-blue-dark"
+            className="w-full bg-oet-blue text-white py-3 sm:py-4 px-4 sm:px-6 rounded-lg font-semibold text-base sm:text-lg shadow-md active:bg-oet-blue-dark min-h-[44px]"
           >
             Aanvragen
           </button>
