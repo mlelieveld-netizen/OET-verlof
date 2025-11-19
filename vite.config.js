@@ -145,5 +145,6 @@ export default defineConfig({
     }
   ],
   base: '/OET-verlof/',
+  publicDir: 'public', // Explicitly set public directory
 })
 
