@@ -5,19 +5,19 @@ import { generateICSFile, downloadICSFile } from '../utils/email';
 const ICSDownloadPage = () => {
   useEffect(() => {
     const downloadICS = async () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const token = urlParams.get('token');
-      
-      if (!token) {
-        document.body.innerHTML = '<div style="padding: 20px; text-align: center;"><h1>Fout</h1><p>Geen token opgegeven.</p></div>';
-        return;
-      }
-
       try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('ics') || urlParams.get('token'); // Support both ?ics= and ?token=
+        
+        if (!token) {
+          document.body.innerHTML = '<div style="padding: 20px; text-align: center; font-family: Arial, sans-serif;"><h1 style="color: #d32f2f;">Fout</h1><p>Geen token opgegeven.</p></div>';
+          return;
+        }
+
         const request = await getLeaveRequestByToken(token);
         
         if (!request) {
-          document.body.innerHTML = '<div style="padding: 20px; text-align: center;"><h1>Fout</h1><p>Verlofaanvraag niet gevonden.</p></div>';
+          document.body.innerHTML = '<div style="padding: 20px; text-align: center; font-family: Arial, sans-serif;"><h1 style="color: #d32f2f;">Fout</h1><p>Verlofaanvraag niet gevonden.</p></div>';
           return;
         }
 
@@ -37,9 +37,10 @@ const ICSDownloadPage = () => {
       } catch (error) {
         console.error('Error downloading ICS:', error);
         document.body.innerHTML = `
-          <div style="padding: 20px; text-align: center;">
+          <div style="padding: 20px; text-align: center; font-family: Arial, sans-serif;">
             <h1 style="color: #d32f2f;">Fout</h1>
             <p>Er is een fout opgetreden bij het downloaden van het agenda item.</p>
+            <p style="margin-top: 10px; color: #666; font-size: 12px;">${error.message || 'Onbekende fout'}</p>
           </div>
         `;
       }
@@ -48,7 +49,12 @@ const ICSDownloadPage = () => {
     downloadICS();
   }, []);
 
-  return null; // This component doesn't render anything, it just triggers the download
+  // Return a simple loading message while processing
+  return (
+    <div style={{ padding: '20px', textAlign: 'center', fontFamily: 'Arial, sans-serif' }}>
+      <p>Agenda item wordt voorbereid...</p>
+    </div>
+  );
 };
 
 export default ICSDownloadPage;
