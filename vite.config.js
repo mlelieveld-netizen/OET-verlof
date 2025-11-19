@@ -28,15 +28,26 @@ export default defineConfig({
         
         // Add CSP meta tag right after charset meta tag
         const cspMeta = `    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://api.emailjs.com https://*.emailjs.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.emailjs.com https://*.emailjs.com; frame-src 'self' https://api.emailjs.com;" />`;
-        // Try to insert after charset, if not found, insert after head tag
-        // Match charset tag with various formats: <meta charset="UTF-8" /> or <meta charset="UTF-8">
-        const charsetPattern = /(<meta\s+charset=["'][^"']*["'][^>]*>)/i;
-        if (charsetPattern.test(html)) {
-          html = html.replace(charsetPattern, '$1\n' + cspMeta);
-        } else if (html.includes('<head>')) {
+        
+        // Try multiple patterns to find where to insert the CSP tag
+        // Pattern 1: After charset tag (most common)
+        if (html.match(/<meta\s+charset=["'][^"']*["'][^>]*>/i)) {
+          html = html.replace(/(<meta\s+charset=["'][^"']*["'][^>]*>)/i, '$1\n' + cspMeta);
+        }
+        // Pattern 2: After viewport tag
+        else if (html.match(/<meta\s+name=["']viewport["'][^>]*>/i)) {
+          html = html.replace(/(<meta\s+name=["']viewport["'][^>]*>)/i, '$1\n' + cspMeta);
+        }
+        // Pattern 3: After head tag
+        else if (html.match(/<head[^>]*>/i)) {
           html = html.replace(/(<head[^>]*>)/i, '$1\n' + cspMeta);
-        } else {
-          // Fallback: insert at the beginning of head section
+        }
+        // Pattern 4: Before first meta tag
+        else if (html.match(/<meta/i)) {
+          html = html.replace(/(<meta)/i, cspMeta + '\n    $1');
+        }
+        // Fallback: Just add it after head
+        else {
           html = html.replace(/(<head[^>]*>)/i, '$1\n' + cspMeta);
         }
         
