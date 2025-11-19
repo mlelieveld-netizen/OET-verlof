@@ -142,9 +142,15 @@ const AdminPage = ({ token }) => {
         console.error('AdminPage: Request not found for token:', token);
         console.log('AdminPage: Redirecting to admin overview page...');
         
-        // Instead of showing error, redirect to admin overview page
-        // This is more user-friendly when a request is not found
-        window.location.href = 'https://mlelieveld-netizen.github.io/OET-verlof/?admin=true';
+        // Set loading to false and request to null so the redirect UI shows
+        setLoading(false);
+        setRequest(null);
+        
+        // Redirect immediately to admin overview page
+        // Use replace instead of href to avoid adding to history
+        setTimeout(() => {
+          window.location.replace('https://mlelieveld-netizen.github.io/OET-verlof/?admin=true');
+        }, 500); // Small delay to show redirect message
         return;
       }
 
