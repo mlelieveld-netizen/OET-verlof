@@ -410,6 +410,17 @@ const AdminPage = ({ token }) => {
   }
 
   // Action taken state (only show if we have a request)
+  // Auto-redirect to admin overview after 5 seconds
+  useEffect(() => {
+    if (actionTaken && request) {
+      const timer = setTimeout(() => {
+        window.location.href = 'https://mlelieveld-netizen.github.io/OET-verlof/?admin=true';
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [actionTaken, request]);
+
   if (actionTaken && request) {
     const statusText = request.status === 'approved' ? 'goedgekeurd' : 'afgewezen';
     return (
@@ -425,6 +436,9 @@ const AdminPage = ({ token }) => {
               Het agenda item is gedownload. Voeg deze toe aan uw email.
             </p>
           )}
+          <p className="text-xs text-gray-400 mt-4">
+            U wordt over 5 seconden automatisch doorgestuurd naar het overzicht...
+          </p>
         </div>
       </div>
     );
