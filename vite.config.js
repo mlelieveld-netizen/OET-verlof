@@ -118,6 +118,7 @@ export default defineConfig({
         html = html.replace('</head>', routingScript + '\n  </head>')
         html = html.replace('</body>', errorScript + '\n  </body>')
         return html
+        }
       }
     }
   ],
