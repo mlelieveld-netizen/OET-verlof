@@ -140,25 +140,11 @@ const AdminPage = ({ token }) => {
       const leaveRequest = getLeaveRequestByToken(token);
       if (!leaveRequest) {
         console.error('AdminPage: Request not found for token:', token);
+        console.log('AdminPage: Redirecting to admin overview page...');
         
-        // Check if there are any sick requests - if so, show overview page with ZIEK tab
-        const allRequests = getLeaveRequests();
-        const hasSickRequests = allRequests.some(r => r && r.status === 'sick');
-        
-        if (hasSickRequests) {
-          // Show overview page with ZIEK tab active instead of error
-          setRequest(null);
-          setLoading(false);
-          setActiveTab('sick');
-          loadPendingRequests();
-          loadApprovedRequests();
-          loadRejectedRequests();
-          loadSickRequests();
-          return;
-        }
-        
-        setError('Verlofaanvraag niet gevonden. Mogelijke oorzaken: De aanvraag is verwijderd, je gebruikt een andere browser/device, of de link is verlopen.');
-        setLoading(false);
+        // Instead of showing error, redirect to admin overview page
+        // This is more user-friendly when a request is not found
+        window.location.href = 'https://mlelieveld-netizen.github.io/OET-verlof/?admin=true';
         return;
       }
 
@@ -380,30 +366,26 @@ const AdminPage = ({ token }) => {
     );
   }
 
-  // Error state - but NOT if we're in overview mode (token === 'overview' and no request is expected)
-  if (error || (!request && token !== 'overview')) {
+  // Auto-redirect to overview if request not found (but not in overview mode)
+  useEffect(() => {
+    if ((error || (!request && !loading)) && token !== 'overview' && token) {
+      console.log('AdminPage: Request not found, redirecting to overview...');
+      const timer = setTimeout(() => {
+        window.location.href = 'https://mlelieveld-netizen.github.io/OET-verlof/?admin=true';
+      }, 1000); // Small delay to show loading message
+      
+      return () => clearTimeout(timer);
+    }
+  }, [error, request, loading, token]);
+
+  // Show loading/redirect message if request not found
+  if ((error || (!request && !loading)) && token !== 'overview' && token) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-md p-6 max-w-md w-full">
-          <div className="text-red-600 text-5xl mb-4 text-center">⚠️</div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-2 text-center">Fout</h1>
-          <div className="text-gray-600 mb-4 text-center">
-            {error ? <p>{error}</p> : <p>Verlofaanvraag niet gevonden</p>}
-          </div>
-          <div className="text-sm text-gray-500 mb-4 p-3 bg-gray-50 rounded">
-            <p className="font-medium mb-2">Mogelijke oplossingen:</p>
-            <ul className="list-disc list-inside space-y-1 text-left">
-              <li>Open de link in dezelfde browser waar je de aanvraag hebt ingediend</li>
-              <li>Controleer of de link correct is gekopieerd</li>
-              <li>Probeer de link opnieuw te openen</li>
-            </ul>
-          </div>
-          <button
-            onClick={() => window.location.href = 'https://mlelieveld-netizen.github.io/OET-verlof/'}
-            className="w-full bg-oet-blue text-white py-2 px-4 rounded-lg font-medium hover:bg-oet-blue-dark transition-colors"
-          >
-            Terug naar hoofdpagina
-          </button>
+        <div className="bg-white rounded-lg shadow-md p-6 max-w-md w-full text-center">
+          <div className="text-blue-600 text-5xl mb-4">⏳</div>
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">Doorsturen...</h1>
+          <p className="text-gray-600">De verlofaanvraag is niet gevonden. U wordt doorgestuurd naar het beheerdersoverzicht.</p>
         </div>
       </div>
     );
