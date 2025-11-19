@@ -26,7 +26,7 @@ const AdminPage = ({ token }) => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-md p-6 max-w-md w-full text-center">
           <div className="text-red-600 text-5xl mb-4">⚠️</div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">Fout</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">Fout</h1>
           <p className="text-gray-600 mb-4">Geen token opgegeven</p>
           <button
             onClick={() => window.location.href = 'https://mlelieveld-netizen.github.io/OET-verlof/'}
@@ -406,7 +406,7 @@ const AdminPage = ({ token }) => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-md p-6 max-w-md w-full text-center">
           <div className="text-blue-600 text-5xl mb-4">⏳</div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">Doorsturen...</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">Doorsturen...</h1>
           <p className="text-gray-600">De verlofaanvraag is niet gevonden. U wordt doorgestuurd naar het beheerdersoverzicht.</p>
         </div>
       </div>
@@ -419,7 +419,7 @@ const AdminPage = ({ token }) => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-md p-6 max-w-md w-full text-center">
           <div className="text-green-600 text-5xl mb-4">✓</div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">Actie uitgevoerd</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">Actie uitgevoerd</h1>
           <p className="text-gray-600">
             De verlofaanvraag is {statusText}.
           </p>
@@ -612,7 +612,7 @@ const AdminPage = ({ token }) => {
       {showRejectModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">Reden voor afwijzing</h2>
+            <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-4">Reden voor afwijzing</h2>
             <p className="text-sm text-gray-600 mb-4">
               Geef een reden op waarom deze verlofaanvraag wordt afgewezen. Deze reden wordt getoond aan de aanvrager.
             </p>
@@ -657,7 +657,7 @@ const ReviewTab = ({ request, pendingRequests, employeeEmail, handleApprove, han
     if (filteredPendingRequests.length === 0) {
       return (
         <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 text-center py-8 sm:py-12">
-          <p className="text-gray-500 text-lg">Geen openstaande verlofaanvragen gevonden.</p>
+          <p className="text-gray-500 text-base sm:text-lg">Geen openstaande verlofaanvragen gevonden.</p>
         </div>
       );
     }
@@ -672,12 +672,12 @@ const ReviewTab = ({ request, pendingRequests, employeeEmail, handleApprove, han
           return (
             <div key={req.id} className="bg-white rounded-lg shadow-md p-4 sm:p-6">
               <div className="flex items-start gap-4 mb-4">
-                <div className="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-700 text-xl font-bold">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-700 text-lg sm:text-xl font-bold">
                   {req.employeeName.charAt(0)}
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-xl font-bold text-gray-800">{req.employeeName}</h3>
+                    <h3 className="text-lg sm:text-xl font-bold text-gray-800">{req.employeeName}</h3>
                     <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">
                       In behandeling
                     </span>
@@ -776,11 +776,11 @@ const ReviewTab = ({ request, pendingRequests, employeeEmail, handleApprove, han
           {/* Employee Info */}
           <div className="mb-6">
             <div className="flex items-center gap-4 mb-4">
-              <div className="w-16 h-16 rounded-full bg-oet-blue flex items-center justify-center text-white text-2xl font-bold">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-oet-blue flex items-center justify-center text-white text-xl sm:text-2xl font-bold">
                 {request.employeeName.charAt(0)}
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-gray-800">{request.employeeName}</h2>
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-800">{request.employeeName}</h2>
                 {employeeEmail && (
                   <p className="text-sm text-gray-600">{employeeEmail}</p>
                 )}
