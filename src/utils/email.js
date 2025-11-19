@@ -7,23 +7,7 @@ import emailjs from '@emailjs/browser';
 const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID || '';
 const EMAILJS_TEMPLATE_ID_ADMIN = import.meta.env.VITE_EMAILJS_TEMPLATE_ID_ADMIN || '';
 const EMAILJS_TEMPLATE_ID_APPROVAL = import.meta.env.VITE_EMAILJS_TEMPLATE_ID_APPROVAL || '';
-const EMAILJS_TEMPLATE_ID_DELETION = import.meta.env.VITE_EMAILJS_TEMPLATE_ID_DELETION || '';
 const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY || '';
-
-// Debug: Log config status (only in development or if explicitly enabled)
-if (typeof window !== 'undefined') {
-  const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  if (isDev || window.location.search.includes('debug=emailjs')) {
-    console.log('📧 EmailJS Config Status:', {
-      SERVICE_ID: EMAILJS_SERVICE_ID ? '✅ Set' : '❌ Missing',
-      PUBLIC_KEY: EMAILJS_PUBLIC_KEY ? '✅ Set' : '❌ Missing',
-      TEMPLATE_ADMIN: EMAILJS_TEMPLATE_ID_ADMIN ? '✅ Set' : '❌ Missing',
-      TEMPLATE_APPROVAL: EMAILJS_TEMPLATE_ID_APPROVAL ? '✅ Set' : '❌ Missing',
-      TEMPLATE_DELETION: EMAILJS_TEMPLATE_ID_DELETION ? '✅ Set' : '❌ Missing',
-      allEnvVars: Object.keys(import.meta.env).filter(k => k.startsWith('VITE_EMAILJS'))
-    });
-  }
-}
 
 // Initialize EmailJS
 if (EMAILJS_PUBLIC_KEY) {
@@ -32,17 +16,18 @@ if (EMAILJS_PUBLIC_KEY) {
 
 // Generate admin approval link
 export const generateAdminLink = (adminToken) => {
-  // Always use the full production URL for emails
-  // This ensures links work from email clients (mobile Outlook, etc.)
-  const productionUrl = 'https://mlelieveld-netizen.github.io/OET-verlof';
-  return `${productionUrl}?token=${adminToken}`;
+  const baseUrl = window.location.origin + window.location.pathname.replace(/\/$/, '');
+  // Remove trailing slash if present
+  const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+  return `${cleanBaseUrl}?token=${adminToken}`;
 };
 
 // Generate pending requests page link
 export const generatePendingPageLink = () => {
-  // Always use the full production URL for emails
-  const productionUrl = 'https://mlelieveld-netizen.github.io/OET-verlof';
-  return `${productionUrl}?page=pending`;
+  const baseUrl = window.location.origin + window.location.pathname.replace(/\/$/, '');
+  // Remove trailing slash if present
+  const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+  return `${cleanBaseUrl}?page=pending`;
 };
 
 // Generate ICS calendar file content
@@ -155,53 +140,21 @@ export const generateApprovalEmailContent = (request) => {
 
 // Send email using EmailJS
 export const sendEmail = async (templateId, templateParams) => {
-  // Debug logging
-  console.log('EmailJS Config Check:', {
-    SERVICE_ID: EMAILJS_SERVICE_ID ? '✅ Set' : '❌ Missing',
-    PUBLIC_KEY: EMAILJS_PUBLIC_KEY ? '✅ Set' : '❌ Missing',
-    TEMPLATE_ID: templateId ? '✅ Set' : '❌ Missing',
-    templateParams: templateParams
-  });
-
   if (!EMAILJS_SERVICE_ID || !EMAILJS_PUBLIC_KEY) {
-    const missing = [];
-    if (!EMAILJS_SERVICE_ID) missing.push('VITE_EMAILJS_SERVICE_ID');
-    if (!EMAILJS_PUBLIC_KEY) missing.push('VITE_EMAILJS_PUBLIC_KEY');
-    const errorMsg = `EmailJS niet geconfigureerd. Ontbrekend: ${missing.join(', ')}. Voor GitHub Pages: voeg secrets toe in Settings → Secrets and variables → Actions en draai de deployment opnieuw.`;
-    console.warn('EmailJS not configured. Missing:', missing);
-    console.warn('Available env vars:', Object.keys(import.meta.env).filter(k => k.startsWith('VITE_')));
-    return { success: false, error: errorMsg };
-  }
-
-  if (!templateId) {
-    console.warn('EmailJS template ID not provided');
-    return { success: false, error: 'Template ID not provided' };
+    console.warn('EmailJS not configured. Skipping email send.');
+    return { success: false, error: 'EmailJS not configured' };
   }
 
   try {
-    console.log('Sending email via EmailJS...', {
-      serviceId: EMAILJS_SERVICE_ID,
-      templateId: templateId,
-      publicKey: EMAILJS_PUBLIC_KEY.substring(0, 5) + '...' // Only show first 5 chars for security
-    });
-    
     const response = await emailjs.send(
       EMAILJS_SERVICE_ID,
       templateId,
       templateParams
     );
-    
-    console.log('Email sent successfully:', response);
     return { success: true, response };
   } catch (error) {
     console.error('Error sending email:', error);
-    console.error('Error details:', {
-      code: error.code,
-      text: error.text,
-      message: error.message,
-      status: error.status
-    });
-    return { success: false, error: error.text || error.message || 'Unknown error' };
+    return { success: false, error: error.message };
   }
 };
 
@@ -214,7 +167,6 @@ export const sendAdminNotificationEmail = async (request, adminLink) => {
   const templateParams = {
     to_email: 'werkplaats@vandenoetelaar-metaal.nl',
     to_name: 'Beheerder',
-    from_name: 'Beheerder@verlof',
     employee_name: request.employeeName,
     leave_type: request.type,
     start_date: new Date(request.startDate).toLocaleDateString('nl-NL'),
@@ -229,91 +181,27 @@ export const sendAdminNotificationEmail = async (request, adminLink) => {
 };
 
 // Send approval email with ICS attachment
-// Note: EmailJS has limited support for file attachments via API
-// We'll include the ICS content as base64 data URI in the email body
 export const sendApprovalEmail = async (request, icsContent) => {
   if (!EMAILJS_TEMPLATE_ID_APPROVAL) {
     return { success: false, error: 'EmailJS template not configured' };
   }
 
-  if (!EMAILJS_SERVICE_ID || !EMAILJS_PUBLIC_KEY) {
-    const missing = [];
-    if (!EMAILJS_SERVICE_ID) missing.push('VITE_EMAILJS_SERVICE_ID');
-    if (!EMAILJS_PUBLIC_KEY) missing.push('VITE_EMAILJS_PUBLIC_KEY');
-    const errorMsg = `EmailJS niet geconfigureerd. Ontbrekend: ${missing.join(', ')}.`;
-    console.warn('EmailJS not configured. Missing:', missing);
-    return { success: false, error: errorMsg };
-  }
-
-  try {
-    // Convert ICS content to base64 for data URI
-    const icsFileName = `verlof-${request.employeeName.replace(/\s+/g, '-')}-${request.startDate}.ics`;
-    const base64Content = btoa(unescape(encodeURIComponent(icsContent)));
-    const dataUri = `data:text/calendar;charset=utf-8;base64,${base64Content}`;
-    
-    // Create download link HTML
-    const icsDownloadLink = `<a href="${dataUri}" download="${icsFileName}" style="display: inline-block; padding: 10px 20px; background-color: #2C3E50; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; margin-top: 10px;">📅 Download Agenda Item (.ics)</a>`;
-    
-    // Prepare template parameters
-    const templateParams = {
-      to_email: 'werkplaats@vandenoetelaar-metaal.nl',
-      to_name: 'Beheerder',
-      from_name: 'Beheerder@verlof',
-      employee_name: request.employeeName,
-      leave_type: request.type,
-      start_date: new Date(request.startDate).toLocaleDateString('nl-NL'),
-      end_date: request.endDate !== request.startDate 
-        ? new Date(request.endDate).toLocaleDateString('nl-NL')
-        : '',
-      start_time: request.startTime || '',
-      end_time: request.endTime || '',
-      reason: request.reason || '',
-      ics_download_link: icsDownloadLink,
-      ics_content: icsContent, // Also include raw content as fallback
-    };
-    
-    console.log('Sending approval email with ICS download link...');
-    
-    // Send using regular send() method with ICS download link in body
-    const response = await emailjs.send(
-      EMAILJS_SERVICE_ID,
-      EMAILJS_TEMPLATE_ID_APPROVAL,
-      templateParams
-    );
-    
-    console.log('Approval email sent successfully:', response);
-    return { success: true, response };
-  } catch (error) {
-    console.error('Error sending approval email:', error);
-    console.error('Error details:', {
-      code: error.code,
-      text: error.text,
-      message: error.message,
-      status: error.status
-    });
-    
-    return { success: false, error: error.text || error.message || 'Unknown error' };
-  }
-};
-
-// Send deletion notification email to admin
-export const sendDeletionNotificationEmail = async (request) => {
-  // Use deletion template if available, otherwise fallback to admin template
-  const templateId = EMAILJS_TEMPLATE_ID_DELETION || EMAILJS_TEMPLATE_ID_ADMIN;
+  // Create a data URI for the ICS file so it can be downloaded from the email
+  // EmailJS can't send attachments, so we include it as a download link
+  const icsFileName = `verlof-${request.employeeName.replace(/\s+/g, '-')}-${request.startDate}.ics`;
+  const base64Content = btoa(unescape(encodeURIComponent(icsContent)));
+  const dataUri = `data:text/calendar;charset=utf-8;base64,${base64Content}`;
   
-  if (!templateId) {
-    return { success: false, error: 'EmailJS template not configured' };
-  }
+  // Create HTML download link for the email template
+  // Note: Some email clients don't support data URIs in links, so we also include the raw content
+  const icsDownloadLink = `<a href="${dataUri}" download="${icsFileName}" style="display: inline-block; padding: 10px 20px; background-color: #2C3E50; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; margin-top: 10px;">📅 Download Agenda Item (.ics)</a>`;
+  
+  // Also create a plain text version for email clients that don't support HTML
+  const icsPlainText = `\n\n---\nAgenda Item (ICS bestand):\nKopieer de onderstaande tekst en sla op als "${icsFileName}":\n\n${icsContent}\n---`;
 
-  const statusText = request.status === 'approved' ? 'goedgekeurd' : 'afgewezen';
-  
-  // Create deletion message with red styling for HTML emails
-  const deletionMessage = `<span style="color: #dc2626; font-weight: bold;">De verlofaanvraag is ingetrokken door de aanvrager. De aanvraag was ${statusText}.</span>`;
-  
   const templateParams = {
     to_email: 'werkplaats@vandenoetelaar-metaal.nl',
     to_name: 'Beheerder',
-    from_name: 'Beheerder@verlof',
     employee_name: request.employeeName,
     leave_type: request.type,
     start_date: new Date(request.startDate).toLocaleDateString('nl-NL'),
@@ -322,10 +210,13 @@ export const sendDeletionNotificationEmail = async (request) => {
       : '',
     start_time: request.startTime || '',
     end_time: request.endTime || '',
-    reason: deletionMessage,
-    previous_status: statusText,
+    reason: request.reason || '',
+    ics_download_link: icsDownloadLink,
+    ics_file_name: icsFileName,
+    ics_content: icsContent, // Raw content as fallback
+    ics_plain_text: icsPlainText, // Plain text version
   };
 
-  return await sendEmail(templateId, templateParams);
+  return await sendEmail(EMAILJS_TEMPLATE_ID_APPROVAL, templateParams);
 };
 
