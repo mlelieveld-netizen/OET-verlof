@@ -25,36 +25,21 @@ export default defineConfig({
         enforce: 'post', // Run after Vite processes the HTML
         transform(html, ctx) {
         // Always ensure CSP meta tag is present with unsafe-eval
-        // First, check if CSP tag already exists - if so, update it
-        const existingCSP = html.match(/<meta[^>]*http-equiv=["']Content-Security-Policy["'][^>]*>/i);
-        
+        // The CSP tag should already be in index.html, but Vite might remove it
+        // So we force it to be present after charset tag
         const cspMeta = `<meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://api.emailjs.com https://*.emailjs.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.emailjs.com https://*.emailjs.com; frame-src 'self' https://api.emailjs.com;" />`;
         
-        if (existingCSP) {
-          // Replace existing CSP tag
-          html = html.replace(/<meta[^>]*http-equiv=["']Content-Security-Policy["'][^>]*>/gi, cspMeta);
+        // Remove any existing CSP tags first
+        html = html.replace(/<meta[^>]*http-equiv=["']Content-Security-Policy["'][^>]*>/gi, '');
+        
+        // Force insert CSP tag right after charset - this is the most reliable location
+        // Match charset with any format
+        const charsetMatch = html.match(/(<meta\s+charset=["'][^"']*["'][^>]*>)/i);
+        if (charsetMatch) {
+          html = html.replace(/(<meta\s+charset=["'][^"']*["'][^>]*>)/i, '$1\n    ' + cspMeta);
         } else {
-          // Add CSP meta tag - try multiple insertion points
-          // Pattern 1: After charset tag (most common)
-          if (html.match(/<meta\s+charset=["'][^"']*["'][^>]*>/i)) {
-            html = html.replace(/(<meta\s+charset=["'][^"']*["'][^>]*>)/i, '$1\n    ' + cspMeta);
-          }
-          // Pattern 2: After viewport tag
-          else if (html.match(/<meta\s+name=["']viewport["'][^>]*>/i)) {
-            html = html.replace(/(<meta\s+name=["']viewport["'][^>]*>)/i, '$1\n    ' + cspMeta);
-          }
-          // Pattern 3: After head tag
-          else if (html.match(/<head[^>]*>/i)) {
-            html = html.replace(/(<head[^>]*>)/i, '$1\n    ' + cspMeta);
-          }
-          // Pattern 4: Before first meta tag
-          else if (html.match(/<meta/i)) {
-            html = html.replace(/(<meta)/i, '    ' + cspMeta + '\n    $1');
-          }
-          // Fallback: Just add it after head
-          else {
-            html = html.replace(/(<head[^>]*>)/i, '$1\n    ' + cspMeta);
-          }
+          // If no charset found, insert after head tag
+          html = html.replace(/(<head[^>]*>)/i, '$1\n    ' + cspMeta);
         }
         
         // Add routing script to built index.html
