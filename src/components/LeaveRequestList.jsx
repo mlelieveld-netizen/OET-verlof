@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { getLeaveRequests, deleteLeaveRequest } from '../utils/storage';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import nl from 'date-fns/locale/nl';
-import { sendDeletionNotificationEmail } from '../utils/email';
+
 
 const LeaveRequestList = ({ refreshTrigger }) => {
   const [requests, setRequests] = useState([]);
@@ -46,7 +46,7 @@ const LeaveRequestList = ({ refreshTrigger }) => {
     // If status is not pending, send notification email to admin
     if (request.status !== 'pending') {
       try {
-        const emailResult = await sendDeletionNotificationEmail(request);
+        const emailResult = 
         if (emailResult && emailResult.success) {
           console.log('Deletion notification email sent to admin');
         } else {
