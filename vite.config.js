@@ -20,8 +20,10 @@ export default defineConfig({
     },
     {
       name: 'add-csp-and-scripts',
-      enforce: 'pre', // Run this plugin before others
-      transformIndexHtml(html) {
+      // Don't use enforce: 'pre' - run after Vite's HTML processing
+      transformIndexHtml: {
+        enforce: 'post', // Run after Vite processes the HTML
+        transform(html, ctx) {
         // Always ensure CSP meta tag is present with unsafe-eval
         // Remove any existing CSP meta tags first
         html = html.replace(/<meta[^>]*http-equiv=["']Content-Security-Policy["'][^>]*>/gi, '');
