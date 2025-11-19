@@ -25,20 +25,23 @@ export default defineConfig({
         enforce: 'post', // Run after Vite processes the HTML
         transform(html, ctx) {
         // Always ensure CSP meta tag is present with unsafe-eval
-        // The CSP tag should already be in index.html, but Vite might remove it
-        // So we force it to be present after charset tag
-        const cspMeta = `<meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://api.emailjs.com https://*.emailjs.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.emailjs.com https://*.emailjs.com; frame-src 'self' https://api.emailjs.com;" />`;
-        
         // Remove any existing CSP tags first
         html = html.replace(/<meta[^>]*http-equiv=["']Content-Security-Policy["'][^>]*>/gi, '');
         
-        // Force insert CSP tag right after charset - this is the most reliable location
-        // Match charset with any format
-        const charsetMatch = html.match(/(<meta\s+charset=["'][^"']*["'][^>]*>)/i);
-        if (charsetMatch) {
-          html = html.replace(/(<meta\s+charset=["'][^"']*["'][^>]*>)/i, '$1\n    ' + cspMeta);
-        } else {
-          // If no charset found, insert after head tag
+        // Add CSP meta tag - MUST include unsafe-eval for Vite/React
+        const cspMeta = `<meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://api.emailjs.com https://*.emailjs.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.emailjs.com https://*.emailjs.com; frame-src 'self' https://api.emailjs.com;" />`;
+        
+        // Insert CSP tag right after charset tag (most reliable location)
+        // Use a more specific pattern to match the charset tag
+        html = html.replace(/(<meta\s+charset=["']UTF-8["'][^>]*>)/i, '$1\n    ' + cspMeta);
+        
+        // If charset pattern didn't match, try after viewport
+        if (!html.includes('Content-Security-Policy')) {
+          html = html.replace(/(<meta\s+name=["']viewport["'][^>]*>)/i, '$1\n    ' + cspMeta);
+        }
+        
+        // Final fallback: insert after head tag
+        if (!html.includes('Content-Security-Policy')) {
           html = html.replace(/(<head[^>]*>)/i, '$1\n    ' + cspMeta);
         }
         
