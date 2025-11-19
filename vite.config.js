@@ -20,6 +20,7 @@ export default defineConfig({
     },
     {
       name: 'add-csp-and-scripts',
+      enforce: 'pre', // Run this plugin before others
       transformIndexHtml(html) {
         // Always ensure CSP meta tag is present with unsafe-eval
         // Remove any existing CSP meta tags first

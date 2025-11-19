@@ -373,7 +373,9 @@ const AdminPage = ({ token }) => {
   }
 
   // Auto-redirect to overview if request not found (but not in overview mode)
+  // Always call useEffect, but only execute redirect logic conditionally
   useEffect(() => {
+    // Only redirect if conditions are met
     if ((error || (!request && !loading)) && token !== 'overview' && token) {
       console.log('AdminPage: Request not found, redirecting to overview...');
       const timer = setTimeout(() => {
@@ -382,6 +384,8 @@ const AdminPage = ({ token }) => {
       
       return () => clearTimeout(timer);
     }
+    // Always return a cleanup function (even if it's a no-op)
+    return () => {};
   }, [error, request, loading, token]);
 
   // Show loading/redirect message if request not found
