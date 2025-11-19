@@ -32,17 +32,30 @@ export default defineConfig({
         const cspMeta = `<meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://api.emailjs.com https://*.emailjs.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.emailjs.com https://*.emailjs.com; frame-src 'self' https://api.emailjs.com;" />`;
         
         // Insert CSP tag right after charset tag (most reliable location)
-        // Use a more specific pattern to match the charset tag
-        html = html.replace(/(<meta\s+charset=["']UTF-8["'][^>]*>)/i, '$1\n    ' + cspMeta);
+        // Try multiple patterns to match the charset tag (Vite might format it differently)
+        let cspAdded = false;
         
-        // If charset pattern didn't match, try after viewport
-        if (!html.includes('Content-Security-Policy')) {
-          html = html.replace(/(<meta\s+name=["']viewport["'][^>]*>)/i, '$1\n    ' + cspMeta);
+        // Pattern 1: <meta charset="UTF-8" />
+        if (html.match(/<meta\s+charset=["']UTF-8["'][^>]*>/i)) {
+          html = html.replace(/(<meta\s+charset=["']UTF-8["'][^>]*>)/i, '$1\n    ' + cspMeta);
+          cspAdded = true;
         }
         
-        // Final fallback: insert after head tag
-        if (!html.includes('Content-Security-Policy')) {
+        // Pattern 2: After viewport tag
+        if (!cspAdded && html.match(/<meta\s+name=["']viewport["'][^>]*>/i)) {
+          html = html.replace(/(<meta\s+name=["']viewport["'][^>]*>)/i, '$1\n    ' + cspMeta);
+          cspAdded = true;
+        }
+        
+        // Pattern 3: After head tag
+        if (!cspAdded && html.match(/<head[^>]*>/i)) {
           html = html.replace(/(<head[^>]*>)/i, '$1\n    ' + cspMeta);
+          cspAdded = true;
+        }
+        
+        // Final fallback: Insert before first script tag
+        if (!cspAdded && html.match(/<script/i)) {
+          html = html.replace(/(<script)/i, '    ' + cspMeta + '\n    $1');
         }
         
         // Add routing script to built index.html
