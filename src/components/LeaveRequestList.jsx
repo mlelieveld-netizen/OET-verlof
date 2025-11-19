@@ -1,72 +1,33 @@
 import { useState, useEffect } from 'react';
-import { getLeaveRequests, deleteLeaveRequest } from '../utils/storage';
+import { getLeaveRequests, updateLeaveRequest, deleteLeaveRequest } from '../utils/storage';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import nl from 'date-fns/locale/nl';
-
+import { generatePendingPageLink } from '../utils/email';
 
 const LeaveRequestList = ({ refreshTrigger }) => {
   const [requests, setRequests] = useState([]);
-  const [filter, setFilter] = useState('pending'); // Default to 'pending' instead of 'all'
+  const [filter, setFilter] = useState('all');
 
   useEffect(() => {
     loadRequests();
   }, [refreshTrigger]);
 
-  // Auto-refresh every 5 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      loadRequests();
-    }, 5000); // 5000ms = 5 seconds
-
-    // Cleanup interval on unmount
-    return () => clearInterval(interval);
-  }, []); // Empty dependency array means this runs once on mount
-
-  const loadRequests = () => {
-    const allRequests = getLeaveRequests();
+  const loadRequests = async () => {
+    const allRequests = await getLeaveRequests();
     setRequests(allRequests.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
   };
 
-  const handleDelete = async (request) => {
-    if (!request || !request.id) {
-      console.error('Invalid request object:', request);
-      return;
-    }
-
-    const statusText = request.status === 'pending' 
-      ? 'intrekken' 
-      : request.status === 'approved' 
-        ? 'verwijderen (deze aanvraag was goedgekeurd)' 
-        : 'verwijderen (deze aanvraag was afgewezen)';
-    
-    if (!window.confirm(`Weet u zeker dat u deze aanvraag wilt ${statusText}?`)) {
-      return;
-    }
-
-    // If status is not pending, send notification email to admin
-    if (request.status !== 'pending') {
-      try {
-        // Removed broken email code 
-        // Removed {
-          // Removed
-        } else {
-          // Removed
-        }
-      } catch (error) {
-        console.error('Error sending deletion notification email:', error);
-        // Continue with deletion even if email fails
-      }
-    }
-
-    try {
-      deleteLeaveRequest(request.id);
-      loadRequests();
-    } catch (error) {
-      console.error('Error deleting request:', error);
-      alert('Er is een fout opgetreden bij het verwijderen van de aanvraag.');
-    }
+  const handleStatusChange = async (id, newStatus) => {
+    await updateLeaveRequest(id, { status: newStatus });
+    loadRequests();
   };
 
+  const handleDelete = async (id) => {
+    if (window.confirm('Weet u zeker dat u deze aanvraag wilt verwijderen?')) {
+      await deleteLeaveRequest(id);
+      loadRequests();
+    }
+  };
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -85,8 +46,6 @@ const LeaveRequestList = ({ refreshTrigger }) => {
         return 'Goedgekeurd';
       case 'rejected':
         return 'Afgewezen';
-      case 'sick':
-        return 'Ziek gemeld';
       default:
         return 'In behandeling';
     }
@@ -95,7 +54,7 @@ const LeaveRequestList = ({ refreshTrigger }) => {
   const getTypeText = (type) => {
     const types = {
       verlof: 'Verlof/Vakantie',
-      ziekte: 'ZIEK',
+      ziekte: 'Dokter/Tandarts',
       persoonlijk: 'Bijzonder verlof',
       vakantie: 'Vakantie',
       ander: 'Ander',
@@ -103,49 +62,60 @@ const LeaveRequestList = ({ refreshTrigger }) => {
     return types[type] || type;
   };
 
-  const filteredRequests = requests.filter(r => r.status === filter);
+  const filteredRequests = filter === 'all' 
+    ? requests 
+    : requests.filter(r => r.status === filter);
 
   const calculateDays = (startDate, endDate) => {
     const start = parseISO(startDate);
     const end = parseISO(endDate);
-    let days = 0;
-    let currentDate = new Date(start);
-    
-    // Helper function to check if date is a holiday
-    const isHoliday = (date) => {
-      const month = date.getMonth(); // 0 = January, 11 = December
-      const day = date.getDate();
-      
-      // 25 December (Christmas)
-      if (month === 11 && day === 25) return true;
-      // 26 December (Boxing Day)
-      if (month === 11 && day === 26) return true;
-      // 1 January (New Year's Day)
-      if (month === 0 && day === 1) return true;
-      
-      return false;
-    };
-    
-    // Count only weekdays (Monday-Friday, excluding weekends and holidays)
-    while (currentDate <= end) {
-      const dayOfWeek = currentDate.getDay(); // 0 = Sunday, 6 = Saturday
-      if (dayOfWeek !== 0 && dayOfWeek !== 6 && !isHoliday(currentDate)) { // Skip weekends and holidays
-        days++;
-      }
-      currentDate.setDate(currentDate.getDate() + 1);
-    }
-    
-    return days;
+    return differenceInDays(end, start) + 1;
   };
+
+  const pendingPageLink = generatePendingPageLink();
+  const pendingCount = requests.filter(r => r.status === 'pending').length;
 
   return (
     <div className="bg-white">
       <div className="mb-4">
+        {/* Link to separate pending page */}
+        {pendingCount > 0 && (
+          <div className="mb-4 p-4 bg-oet-blue-light rounded-lg border border-oet-blue">
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div>
+                <p className="font-semibold text-oet-blue-dark">
+                  {pendingCount} {pendingCount === 1 ? 'aanvraag' : 'aanvragen'} in behandeling
+                </p>
+                <p className="text-sm text-gray-600 mt-1">
+                  Open de aparte beheerderspagina om alle aanvragen te beoordelen
+                </p>
+              </div>
+              <a
+                href={pendingPageLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 bg-oet-blue text-white rounded-lg font-medium hover:bg-oet-blue-dark transition-colors whitespace-nowrap"
+              >
+                Open Beheerderspagina →
+              </a>
+            </div>
+          </div>
+        )}
 
         <div className="flex gap-2 overflow-x-auto pb-2">
           <button
+            onClick={() => setFilter('all')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
+              filter === 'all'
+                ? 'bg-oet-blue text-white'
+                : 'bg-gray-200 text-gray-700'
+            }`}
+          >
+            Alle
+          </button>
+          <button
             onClick={() => setFilter('pending')}
-            className={`px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-medium transition-colors whitespace-nowrap min-h-[44px] ${
+            className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
               filter === 'pending'
                 ? 'bg-oet-blue text-white'
                 : 'bg-gray-200 text-gray-700'
@@ -155,7 +125,7 @@ const LeaveRequestList = ({ refreshTrigger }) => {
           </button>
           <button
             onClick={() => setFilter('approved')}
-            className={`px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-medium transition-colors whitespace-nowrap min-h-[44px] ${
+            className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
               filter === 'approved'
                 ? 'bg-oet-blue text-white'
                 : 'bg-gray-200 text-gray-700'
@@ -165,7 +135,7 @@ const LeaveRequestList = ({ refreshTrigger }) => {
           </button>
           <button
             onClick={() => setFilter('rejected')}
-            className={`px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-medium transition-colors whitespace-nowrap min-h-[44px] ${
+            className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
               filter === 'rejected'
                 ? 'bg-oet-blue text-white'
                 : 'bg-gray-200 text-gray-700'
@@ -185,7 +155,7 @@ const LeaveRequestList = ({ refreshTrigger }) => {
           {filteredRequests.map((request) => (
             <div
               key={request.id}
-              className="border border-gray-200 rounded-lg p-3 sm:p-4 bg-white"
+              className="border border-gray-200 rounded-lg p-4 bg-white"
             >
               <div className="flex justify-between items-start mb-3">
                 <div className="flex-1">
@@ -193,16 +163,10 @@ const LeaveRequestList = ({ refreshTrigger }) => {
                     <h3 className="text-lg font-semibold text-gray-800">
                       {request.employeeName}
                     </h3>
-                    {request.status !== 'sick' && (
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(request.status)}`}>
-                        {getStatusText(request.status)}
-                      </span>
-                    )}
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      request.type === 'ziekte' 
-                        ? 'bg-red-100 text-red-800 font-bold' 
-                        : 'bg-oet-blue-light text-oet-blue-dark'
-                    }`}>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(request.status)}`}>
+                      {getStatusText(request.status)}
+                    </span>
+                    <span className="px-3 py-1 bg-oet-blue-light text-oet-blue-dark rounded-full text-xs font-medium">
                       {getTypeText(request.type)}
                     </span>
                   </div>
@@ -222,14 +186,6 @@ const LeaveRequestList = ({ refreshTrigger }) => {
                         <span className="font-medium">Reden:</span> {request.reason}
                       </p>
                     )}
-                    {request.status === 'rejected' && (
-                      <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded">
-                        <p className="text-sm font-medium text-red-800 mb-1">Reden voor afwijzing:</p>
-                        <p className="text-sm text-red-700">
-                          {request.rejectionReason || 'Geen reden opgegeven'}
-                        </p>
-                      </div>
-                    )}
                     <p className="text-xs text-gray-500 mt-2">
                       Aangemaakt op: {format(parseISO(request.createdAt), 'd MMMM yyyy HH:mm', { locale: nl })}
                     </p>
@@ -237,15 +193,47 @@ const LeaveRequestList = ({ refreshTrigger }) => {
                 </div>
               </div>
 
-              {/* Delete button - always visible */}
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <button
-                  onClick={() => handleDelete(request)}
-                  className="w-full py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors min-h-[44px]"
-                >
-                  {request.status === 'pending' ? 'Intrekken' : 'Verwijderen'}
-                </button>
-              </div>
+              {request.status === 'pending' && (
+                <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-gray-200">
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleStatusChange(request.id, 'approved')}
+                      className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg font-medium active:bg-green-700"
+                    >
+                      Goedkeuren
+                    </button>
+                    <button
+                      onClick={() => handleStatusChange(request.id, 'rejected')}
+                      className="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg font-medium active:bg-red-700"
+                    >
+                      Afwijzen
+                    </button>
+                  </div>
+                  <button
+                    onClick={() => handleDelete(request.id)}
+                    className="w-full py-2 bg-gray-200 text-gray-700 rounded-lg font-medium active:bg-gray-300"
+                  >
+                    Verwijderen
+                  </button>
+                </div>
+              )}
+
+              {request.status !== 'pending' && (
+                <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-gray-200">
+                  <button
+                    onClick={() => handleStatusChange(request.id, 'pending')}
+                    className="w-full py-2 bg-gray-200 text-gray-700 rounded-lg font-medium active:bg-gray-300"
+                  >
+                    Terugzetten
+                  </button>
+                  <button
+                    onClick={() => handleDelete(request.id)}
+                    className="w-full py-2 bg-gray-200 text-gray-700 rounded-lg font-medium active:bg-gray-300"
+                  >
+                    Verwijderen
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -255,4 +243,3 @@ const LeaveRequestList = ({ refreshTrigger }) => {
 };
 
 export default LeaveRequestList;
-
