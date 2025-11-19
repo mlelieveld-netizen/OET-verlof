@@ -58,14 +58,14 @@ Klik op de volgende link om de aanvraag te beoordelen:
 {{#reason}}<strong>Reden:</strong> {{reason}}<br>{{/reason}}
 </p>
 
-<p>Het agenda item (ICS bestand) is als bijlage toegevoegd aan deze email. Open de bijlage om het toe te voegen aan je agenda.</p>
+<p>Klik op de onderstaande knop om het agenda item te downloaden en toe te voegen aan je agenda:</p>
+
+{{{ics_download_link}}}
+
+<p><em>Of kopieer de onderstaande ICS inhoud en plak deze in een .ics bestand:</em></p>
+<pre style="background: #f5f5f5; padding: 10px; border-radius: 5px; overflow-x: auto; font-size: 11px;">{{ics_content}}</pre>
 ```
-6. **BELANGRIJK - File Attachment toevoegen:**
-   - Scroll naar beneden in de template editor
-   - Klik op "Add Attachment" of "Bijlage toevoegen"
-   - Kies "Form File Attachment"
-   - Parameter naam: `ics_file` (exact zoals hier, zonder spaties)
-   - Dit zorgt ervoor dat het ICS bestand als bijlage wordt meegestuurd
+6. **BELANGRIJK:** Gebruik `{{{ics_download_link}}}` (met 3 accolades) om de HTML link zonder escaping te tonen
 7. Noteer de **Template ID** (bijv. `template_yyyyy`)
 
 ### Template 3: Intrekking Notificatie (verlofaanvraag ingetrokken)

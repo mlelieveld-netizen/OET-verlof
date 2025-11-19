@@ -228,7 +228,9 @@ export const sendAdminNotificationEmail = async (request, adminLink) => {
   return await sendEmail(EMAILJS_TEMPLATE_ID_ADMIN, templateParams);
 };
 
-// Send approval email with ICS attachment using sendForm for file attachment support
+// Send approval email with ICS attachment
+// Note: EmailJS has limited support for file attachments via API
+// We'll include the ICS content as base64 data URI in the email body
 export const sendApprovalEmail = async (request, icsContent) => {
   if (!EMAILJS_TEMPLATE_ID_APPROVAL) {
     return { success: false, error: 'EmailJS template not configured' };
@@ -244,100 +246,15 @@ export const sendApprovalEmail = async (request, icsContent) => {
   }
 
   try {
-    // Create a temporary form element for file attachment
-    const form = document.createElement('form');
-    form.style.display = 'none';
-    
-    // Create ICS file as blob
+    // Convert ICS content to base64 for data URI
     const icsFileName = `verlof-${request.employeeName.replace(/\s+/g, '-')}-${request.startDate}.ics`;
-    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-    const file = new File([blob], icsFileName, { type: 'text/calendar' });
+    const base64Content = btoa(unescape(encodeURIComponent(icsContent)));
+    const dataUri = `data:text/calendar;charset=utf-8;base64,${base64Content}`;
     
-    // Create file input
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.name = 'ics_file';
+    // Create download link HTML
+    const icsDownloadLink = `<a href="${dataUri}" download="${icsFileName}" style="display: inline-block; padding: 10px 20px; background-color: #2C3E50; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; margin-top: 10px;">📅 Download Agenda Item (.ics)</a>`;
     
-    // Create a DataTransfer object to set the file (modern browsers)
-    // Fallback for older browsers
-    try {
-      const dataTransfer = new DataTransfer();
-      dataTransfer.items.add(file);
-      fileInput.files = dataTransfer.files;
-    } catch (e) {
-      // Fallback: create a FileList manually (for older browsers)
-      console.warn('DataTransfer not supported, using fallback method');
-      // For older browsers, we'll need to use a different approach
-      // Create a FileList-like object
-      const fileList = {
-        0: file,
-        length: 1,
-        item: (index) => index === 0 ? file : null,
-        [Symbol.iterator]: function* () {
-          yield file;
-        }
-      };
-      Object.setPrototypeOf(fileList, FileList.prototype);
-      Object.defineProperty(fileInput, 'files', {
-        value: fileList,
-        writable: false,
-        configurable: false
-      });
-    }
-    
-    // Add other form fields
-    const fields = {
-      to_email: 'werkplaats@vandenoetelaar-metaal.nl',
-      to_name: 'Beheerder',
-      from_name: 'Beheerder@verlof',
-      employee_name: request.employeeName,
-      leave_type: request.type,
-      start_date: new Date(request.startDate).toLocaleDateString('nl-NL'),
-      end_date: request.endDate !== request.startDate 
-        ? new Date(request.endDate).toLocaleDateString('nl-NL')
-        : '',
-      start_time: request.startTime || '',
-      end_time: request.endTime || '',
-      reason: request.reason || '',
-    };
-    
-    // Add all fields to form
-    Object.entries(fields).forEach(([key, value]) => {
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = key;
-      input.value = value;
-      form.appendChild(input);
-    });
-    
-    form.appendChild(fileInput);
-    document.body.appendChild(form);
-    
-    console.log('Sending email with ICS attachment via sendForm...');
-    
-    // Send using sendForm for file attachment support
-    const response = await emailjs.sendForm(
-      EMAILJS_SERVICE_ID,
-      EMAILJS_TEMPLATE_ID_APPROVAL,
-      form
-    );
-    
-    // Clean up
-    document.body.removeChild(form);
-    
-    console.log('Email with attachment sent successfully:', response);
-    return { success: true, response };
-  } catch (error) {
-    console.error('Error sending email with attachment:', error);
-    console.error('Error details:', {
-      code: error.code,
-      text: error.text,
-      message: error.message,
-      status: error.status
-    });
-    
-    // Fallback: try without attachment using regular send()
-    console.log('Falling back to send() without attachment...');
+    // Prepare template parameters
     const templateParams = {
       to_email: 'werkplaats@vandenoetelaar-metaal.nl',
       to_name: 'Beheerder',
@@ -351,10 +268,31 @@ export const sendApprovalEmail = async (request, icsContent) => {
       start_time: request.startTime || '',
       end_time: request.endTime || '',
       reason: request.reason || '',
-      ics_content: icsContent,
+      ics_download_link: icsDownloadLink,
+      ics_content: icsContent, // Also include raw content as fallback
     };
     
-    return await sendEmail(EMAILJS_TEMPLATE_ID_APPROVAL, templateParams);
+    console.log('Sending approval email with ICS download link...');
+    
+    // Send using regular send() method with ICS download link in body
+    const response = await emailjs.send(
+      EMAILJS_SERVICE_ID,
+      EMAILJS_TEMPLATE_ID_APPROVAL,
+      templateParams
+    );
+    
+    console.log('Approval email sent successfully:', response);
+    return { success: true, response };
+  } catch (error) {
+    console.error('Error sending approval email:', error);
+    console.error('Error details:', {
+      code: error.code,
+      text: error.text,
+      message: error.message,
+      status: error.status
+    });
+    
+    return { success: false, error: error.text || error.message || 'Unknown error' };
   }
 };
 
