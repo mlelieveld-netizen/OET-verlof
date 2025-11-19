@@ -186,18 +186,24 @@ export const sendApprovalEmail = async (request, icsContent) => {
     return { success: false, error: 'EmailJS template not configured' };
   }
 
-  // Create a data URI for the ICS file so it can be downloaded from the email
-  // EmailJS can't send attachments, so we include it as a download link
+  // Create ICS file name
   const icsFileName = `verlof-${request.employeeName.replace(/\s+/g, '-')}-${request.startDate}.ics`;
+  
+  // Create a data URI for the ICS file - this works in most email clients
   const base64Content = btoa(unescape(encodeURIComponent(icsContent)));
   const dataUri = `data:text/calendar;charset=utf-8;base64,${base64Content}`;
   
-  // Create HTML download link for the email template
-  // Note: Some email clients don't support data URIs in links, so we also include the raw content
-  const icsDownloadLink = `<a href="${dataUri}" download="${icsFileName}" style="display: inline-block; padding: 10px 20px; background-color: #2C3E50; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; margin-top: 10px;">📅 Download Agenda Item (.ics)</a>`;
+  // Create a simple, working download link
+  // Using data URI which should work in most modern email clients
+  const icsDownloadLink = `<div style="margin: 20px 0;">
+  <a href="${dataUri}" style="display: inline-block; padding: 12px 24px; background-color: #2C3E50; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">📅 Download Agenda Item (.ics bestand)</a>
+</div>
+<p style="color: #666; font-size: 14px; margin-top: 10px;">
+  <strong>Bestandsnaam:</strong> ${icsFileName}
+</p>`;
   
-  // Also create a plain text version for email clients that don't support HTML
-  const icsPlainText = `\n\n---\nAgenda Item (ICS bestand):\nKopieer de onderstaande tekst en sla op als "${icsFileName}":\n\n${icsContent}\n---`;
+  // Also include the ICS content as formatted text for manual copy/paste
+  const icsContentFormatted = icsContent.replace(/\r\n/g, '\n').replace(/\n/g, '<br>');
 
   const templateParams = {
     to_email: 'werkplaats@vandenoetelaar-metaal.nl',
@@ -213,8 +219,8 @@ export const sendApprovalEmail = async (request, icsContent) => {
     reason: request.reason || '',
     ics_download_link: icsDownloadLink,
     ics_file_name: icsFileName,
-    ics_content: icsContent, // Raw content as fallback
-    ics_plain_text: icsPlainText, // Plain text version
+    ics_content: icsContent, // Raw content for copy/paste
+    ics_content_formatted: icsContentFormatted, // Formatted with <br> tags
   };
 
   return await sendEmail(EMAILJS_TEMPLATE_ID_APPROVAL, templateParams);

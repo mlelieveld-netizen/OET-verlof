@@ -58,13 +58,14 @@ Klik op de volgende link om de aanvraag te beoordelen:
 {{#reason}}<strong>Reden:</strong> {{reason}}<br>{{/reason}}
 </p>
 
-<p><strong>Agenda Item:</strong></p>
-<p>Klik op de onderstaande knop om het agenda item (.ics bestand) te downloaden:</p>
-<p>{{{ics_download_link}}}</p>
+<p><strong>Agenda Item (.ics bestand):</strong></p>
+<p>Klik op de onderstaande knop om het agenda item te downloaden:</p>
+{{{ics_download_link}}}
 
-<p style="color: #666; font-size: 12px; margin-top: 20px;">
-<strong>Alternatief:</strong> Als de download knop niet werkt, kopieer de onderstaande tekst en sla op als "{{ics_file_name}}":<br>
-<pre style="background: #f5f5f5; padding: 10px; overflow-x: auto; font-size: 11px;">{{ics_content}}</pre>
+<p style="color: #666; font-size: 13px; margin-top: 20px; padding: 15px; background-color: #f9f9f9; border-left: 4px solid #2C3E50;">
+<strong>Alternatief - Handmatig kopiëren:</strong><br>
+Als de download knop niet werkt in je email client, kopieer de onderstaande tekst en sla deze op als bestand met de naam "{{ics_file_name}}":<br><br>
+<pre style="background: #ffffff; padding: 15px; border: 1px solid #ddd; overflow-x: auto; font-size: 11px; font-family: monospace; white-space: pre-wrap; word-wrap: break-word;">{{ics_content}}</pre>
 </p>
 ```
 
