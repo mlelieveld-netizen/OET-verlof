@@ -7,6 +7,7 @@ import { format, parseISO, differenceInDays } from 'date-fns';
 import nl from 'date-fns/locale/nl';
 
 const AdminPage = ({ token }) => {
+  // ALL hooks must be declared BEFORE any early returns
   const [request, setRequest] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -15,6 +16,7 @@ const AdminPage = ({ token }) => {
   const [approvedRequests, setApprovedRequests] = useState([]);
   const [rejectedRequests, setRejectedRequests] = useState([]);
   const [sickRequests, setSickRequests] = useState([]);
+  const [pendingRequests, setPendingRequests] = useState([]);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
 
@@ -36,8 +38,6 @@ const AdminPage = ({ token }) => {
       </div>
     );
   }
-
-  const [pendingRequests, setPendingRequests] = useState([]);
 
   const loadPendingRequests = () => {
     const allRequests = getLeaveRequests();
